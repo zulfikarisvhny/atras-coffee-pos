@@ -362,7 +362,7 @@
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
       state.orders = {};
-      (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], paymentMethod:o.payment_method||null}; });
+      (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], paymentMethod:o.payment_method||null, openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
         if(!state.orders[it.table_id]) state.orders[it.table_id] = {items:[], paymentMethod:null};
         state.orders[it.table_id].items.push({
@@ -379,7 +379,7 @@
   }
 
   function order(tableId){ return state.orders[tableId]; }
-  function ensureOrderLocal(tableId){ if(!state.orders[tableId]) state.orders[tableId]={items:[],paymentMethod:null}; return state.orders[tableId]; }
+  function ensureOrderLocal(tableId){ if(!state.orders[tableId]) state.orders[tableId]={items:[],paymentMethod:null,openedAt:Date.now()}; return state.orders[tableId]; }
   function tableById(id){ return state.tables.find(t=>t.id===id); }
   function tableColor(tableId){
     const idx = state.tables.findIndex(t=>t.id===tableId);
@@ -501,12 +501,13 @@
     const tname = tableById(tableId).name;
     const total = itemsTotal(o.items);
     const snapshot = o.items.map(it=>({name:it.name, qty:it.qty, price:it.price, status:it.status}));
+    const openedAtIso = new Date(o.openedAt || Date.now()).toISOString();
     delete state.orders[tableId];
     openTableId=null;
     render();
     (async ()=>{
       try{
-        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:o.paymentMethod});
+        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:o.paymentMethod, opened_at:openedAtIso, closed_at:new Date().toISOString()});
         await sb.from('pos_orders').delete().eq('table_id', tableId);
         showToast('Meja ditutup & direset');
       }catch(e){ reportError(e,'tutup meja'); }
