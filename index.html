@@ -330,7 +330,6 @@
   let newOrderActive = false;
   let draftItems = [];
   let draftTableId = null;
-  let draftPayment = 'belum';
   let orderSearch = '';
   let orderCatFilter = 'Semua';
   let menuCatFilter = 'Semua';
@@ -506,31 +505,43 @@
   function unpaidLines(items){
     return items.filter(it=>!it.paymentMethod);
   }
-  async function processSplitPayment(tableId, selections, method){
-    // selections: [{itemId, qty}] qty = jumlah unit dari baris itu yang dibayar sekarang
-    const o = order(tableId); if(!o) return;
+  function itemsRefFor(sp){
+    return sp.mode==='draft' ? draftItems : (order(sp.tableId) ? order(sp.tableId).items : []);
+  }
+  async function processSplitPayment(){
+    const sp = splitPayOpen; if(!sp) return;
+    const items = itemsRefFor(sp);
     const dbOps = [];
-    selections.forEach(sel=>{
-      if(sel.qty<=0) return;
-      const item = o.items.find(i=>i.id===sel.itemId);
+    sp.lines.forEach(l=>{
+      const qty = sp.selections[l.id]||0;
+      if(qty<=0) return;
+      const item = items.find(i=>i.id===l.id);
       if(!item) return;
-      if(sel.qty>=item.qty){
-        item.paymentMethod = method;
-        dbOps.push(sb.from('pos_order_items').update({payment_method:method}).eq('id', item.id));
+      if(qty>=item.qty){
+        item.paymentMethod = sp.method;
+        if(sp.mode!=='draft') dbOps.push(sb.from('pos_order_items').update({payment_method:sp.method}).eq('id', item.id));
       } else {
-        item.qty -= sel.qty;
+        item.qty -= qty;
         const paidPortion = {
           id:'it'+Date.now()+Math.random().toString(36).slice(2,6),
-          menuId:item.menuId, name:item.name, price:item.price, qty:sel.qty,
-          status:item.status, addedAt:item.addedAt, paymentMethod:method
+          menuId:item.menuId, name:item.name, price:item.price, qty:qty,
+          status:item.status, addedAt:item.addedAt, paymentMethod:sp.method
         };
-        o.items.push(paidPortion);
-        dbOps.push(sb.from('pos_order_items').update({qty:item.qty}).eq('id', item.id));
-        dbOps.push(sb.from('pos_order_items').insert({id:paidPortion.id, table_id:tableId, menu_id:paidPortion.menuId, name:paidPortion.name, price:paidPortion.price, qty:paidPortion.qty, status:paidPortion.status, added_at:new Date(paidPortion.addedAt).toISOString(), payment_method:method}));
+        items.push(paidPortion);
+        if(sp.mode!=='draft'){
+          dbOps.push(sb.from('pos_order_items').update({qty:item.qty}).eq('id', item.id));
+          dbOps.push(sb.from('pos_order_items').insert({id:paidPortion.id, table_id:sp.tableId, menu_id:paidPortion.menuId, name:paidPortion.name, price:paidPortion.price, qty:paidPortion.qty, status:paidPortion.status, added_at:new Date(paidPortion.addedAt).toISOString(), payment_method:sp.method}));
+        }
       }
     });
+    const totalPaid = sp.lines.reduce((s,l)=> s + l.price*(sp.selections[l.id]||0), 0);
+    const methodLabel = sp.method==='cash' ? 'Cash' : 'QRIS';
+    splitPayOpen = null;
     render();
-    try{ await Promise.all(dbOps); }catch(e){ reportError(e,'proses pembayaran'); }
+    if(sp.mode!=='draft'){
+      try{ await Promise.all(dbOps); }catch(e){ reportError(e,'proses pembayaran'); }
+    }
+    showToast('Pembayaran '+fmtMoney(totalPaid)+' ('+methodLabel+') tercatat');
   }
   function closeTable(tableId){
     const o = order(tableId);
@@ -584,19 +595,20 @@
   }
 
   function startNewOrder(){
-    newOrderActive = true; draftItems = []; draftTableId = null; draftPayment = 'belum';
+    newOrderActive = true; draftItems = []; draftTableId = null;
     orderSearch=''; orderCatFilter='Semua';
     render();
   }
   function finalizeNewOrder(){
     if(draftItems.length===0 || !draftTableId) return;
     const tid = draftTableId;
-    const method = draftPayment==='belum' ? null : draftPayment;
-    const items = draftItems.map(it=>({...it, paymentMethod: method}));
+    const items = draftItems;
     const o = ensureOrderLocal(tid);
     o.items = o.items.concat(items);
     const tname = tableById(tid).name;
-    newOrderActive=false; draftItems=[]; draftTableId=null; draftPayment='belum';
+    const stillUnpaid = items.some(it=>!it.paymentMethod);
+    newOrderActive=false; draftItems=[]; draftTableId=null;
+    if(stillUnpaid){ openTableId = tid; } // ada sisa belum dibayar, lanjut ke meja itu buat di-split lagi
     render();
     (async ()=>{
       try{
@@ -779,8 +791,7 @@
     const t = isNew ? (draftTableId ? tableById(draftTableId) : null) : tableById(openTableId);
     if(!isNew && !t){ openTableId=null; return; }
     const items = isNew ? draftItems : ensureOrderLocal(openTableId).items;
-    const paymentMethod = isNew ? draftPayment : null;
-    const breakdown = isNew ? null : paymentBreakdown(items);
+    const breakdown = paymentBreakdown(items);
     const total = itemsTotal(items);
     const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
     const filtered = state.menu.filter(m=>
@@ -825,7 +836,7 @@
               <div class="cart-item">
                 <div>
                   <div class="nm">${it.qty}x ${it.name}</div>
-                  <div class="sub">${fmtMoney(it.price*it.qty)} · ${it.status==='served'?'Diantar':timeAgo(it.addedAt)}${!isNew && it.paymentMethod ? ' · '+(it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : ''}</div>
+                  <div class="sub">${fmtMoney(it.price*it.qty)} · ${isNew ? (it.paymentMethod ? (it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : 'Belum bayar') : (it.status==='served'?'Diantar':timeAgo(it.addedAt))+(it.paymentMethod ? ' · '+(it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : '')}</div>
                 </div>
                 <div class="cart-item-right">
                   ${isNew ? '' : `<button class="status-pill ${it.status}" data-toggle="${it.id}">${it.status==='pending'?'Belum diantar':'✓ Diantar'}</button>`}
@@ -850,11 +861,14 @@
             }).join('')}
           </div>
           <div class="section-label">3. Pembayaran</div>
-          <div class="pay-row">
-            <button class="${paymentMethod==='belum'?'sel belum':''}" data-paynew="belum">⏳<br/>Belum Bayar</button>
-            <button class="${paymentMethod==='cash'?'sel cash':''}" data-paynew="cash">💵<br/>Cash</button>
-            <button class="${paymentMethod==='qris'?'sel qris':''}" data-paynew="qris">📱<br/>QRIS</button>
+          <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">
+            ${breakdown.cash>0?`<div>💵 Cash: <b style="color:var(--ink);">${fmtMoney(breakdown.cash)}</b></div>`:''}
+            ${breakdown.qris>0?`<div>📱 QRIS: <b style="color:var(--ink);">${fmtMoney(breakdown.qris)}</b></div>`:''}
+            ${breakdown.belum>0?`<div>⏳ Belum bayar: <b style="color:var(--red);">${fmtMoney(breakdown.belum)}</b></div>`:''}
+            ${items.length===0 ? '<div>Belum ada item</div>' : ''}
           </div>
+          ${breakdown.belum>0 ? `<button class="btn btn-ghost" id="splitPayBtn" style="width:100%;margin-bottom:8px;">💳 Atur Pembayaran${breakdown.cash===0 && breakdown.qris===0 ? '' : ' / Split'}</button>` : ''}
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px;">Boleh dibiarkan "Belum bayar" dan disettle nanti — pesanan tetap bisa disimpan.</div>
           <button class="btn btn-purple" id="finishNewBtn" style="width:100%;" ${items.length===0 || !draftTableId ? 'disabled':''}>✓ Selesai Pesanan</button>
         ` : `
           <div class="section-label">Status Pembayaran</div>
@@ -874,7 +888,7 @@
     app.appendChild(screen);
 
     document.getElementById('backBtn').onclick = ()=>{
-      if(isNew){ newOrderActive=false; draftItems=[]; draftTableId=null; draftPayment='belum'; }
+      if(isNew){ newOrderActive=false; draftItems=[]; draftTableId=null; }
       else { openTableId=null; }
       render();
     };
@@ -910,12 +924,13 @@
           draftTableId = tid; render();
         };
       });
-      screen.querySelectorAll('[data-paynew]').forEach(b=>{ b.onclick=()=>{ draftPayment=b.dataset.paynew; render(); }; });
+      const spDraftBtn = document.getElementById('splitPayBtn');
+      if(spDraftBtn) spDraftBtn.onclick = ()=>{ openSplitPay('draft', null); };
       const finishBtn = document.getElementById('finishNewBtn');
       if(finishBtn) finishBtn.onclick = finalizeNewOrder;
     } else {
       const spBtn = document.getElementById('splitPayBtn');
-      if(spBtn) spBtn.onclick = ()=>{ openSplitPay(openTableId); };
+      if(spBtn) spBtn.onclick = ()=>{ openSplitPay('existing', openTableId); };
       document.getElementById('finishExistBtn').onclick = ()=>{ openTableId=null; render(); showToast('Pesanan disimpan'); };
       document.getElementById('cancelOrderBtn').onclick = ()=>{
         const tid = openTableId;
@@ -947,13 +962,13 @@
     document.getElementById('ccDetail').onclick = ()=>{ openTableId=confirmCloseTableId; confirmCloseTableId=null; render(); };
   }
 
-  function openSplitPay(tableId){
-    const o = order(tableId); if(!o) return;
-    const lines = unpaidLines(o.items);
+  function openSplitPay(mode, tableId){
+    const items = mode==='draft' ? draftItems : (order(tableId) ? order(tableId).items : []);
+    const lines = unpaidLines(items);
     if(lines.length===0) return;
     const selections = {};
     lines.forEach(it=>{ selections[it.id] = it.qty; }); // default: bayar penuh
-    splitPayOpen = { tableId, lines: lines.map(it=>({id:it.id, name:it.name, price:it.price, maxQty:it.qty})), selections, method:null };
+    splitPayOpen = { mode, tableId, lines: lines.map(it=>({id:it.id, name:it.name, price:it.price, maxQty:it.qty})), selections, method:null };
     render();
   }
   function renderSplitPayModal(){
@@ -1007,11 +1022,7 @@
       b.onclick = ()=>{ sp.method = b.dataset.spmethod; render(); };
     });
     document.getElementById('spConfirm').onclick = async ()=>{
-      const tableId = sp.tableId, method = sp.method;
-      const selections = sp.lines.map(l=>({itemId:l.id, qty:sp.selections[l.id]||0}));
-      splitPayOpen = null;
-      await processSplitPayment(tableId, selections, method);
-      showToast('Pembayaran '+fmtMoney(total)+' ('+(method==='cash'?'Cash':'QRIS')+') tercatat');
+      await processSplitPayment();
     };
   }
 
