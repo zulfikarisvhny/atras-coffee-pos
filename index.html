@@ -326,6 +326,7 @@
   let editMode = false;
   let openTableId = null;
   let confirmCloseTableId = null;
+  let splitPayOpen = null; // {tableId, selections:{itemId:qty}, method}
   let newOrderActive = false;
   let draftItems = [];
   let draftTableId = null;
@@ -362,12 +363,12 @@
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
       state.orders = {};
-      (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], paymentMethod:o.payment_method||null, openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
+      (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
-        if(!state.orders[it.table_id]) state.orders[it.table_id] = {items:[], paymentMethod:null};
+        if(!state.orders[it.table_id]) state.orders[it.table_id] = {items:[], openedAt:Date.now()};
         state.orders[it.table_id].items.push({
           id: it.id, menuId: it.menu_id, name: it.name, price: it.price, qty: it.qty,
-          status: it.status, addedAt: new Date(it.added_at).getTime()
+          status: it.status, addedAt: new Date(it.added_at).getTime(), paymentMethod: it.payment_method || null
         });
       });
       dbReady = true;
@@ -379,7 +380,7 @@
   }
 
   function order(tableId){ return state.orders[tableId]; }
-  function ensureOrderLocal(tableId){ if(!state.orders[tableId]) state.orders[tableId]={items:[],paymentMethod:null,openedAt:Date.now()}; return state.orders[tableId]; }
+  function ensureOrderLocal(tableId){ if(!state.orders[tableId]) state.orders[tableId]={items:[],openedAt:Date.now()}; return state.orders[tableId]; }
   function tableById(id){ return state.tables.find(t=>t.id===id); }
   function tableColor(tableId){
     const idx = state.tables.findIndex(t=>t.id===tableId);
@@ -397,13 +398,26 @@
     const o = order(tableId);
     if(!o || o.items.length===0) return 'empty';
     if(o.items.some(it=>it.status==='pending')) return 'pending';
-    if(!o.paymentMethod) return 'unpaid';
+    if(o.items.some(it=>!it.paymentMethod)) return 'unpaid';
     return 'done';
   }
-  function payLabel(method){
-    if(method==='cash') return 'Cash';
-    if(method==='qris') return 'QRIS';
-    return 'Belum Bayar';
+  function paymentBreakdown(items){
+    const out = {cash:0, qris:0, belum:0};
+    items.forEach(it=>{
+      const sub = it.price*it.qty;
+      if(it.paymentMethod==='cash') out.cash += sub;
+      else if(it.paymentMethod==='qris') out.qris += sub;
+      else out.belum += sub;
+    });
+    return out;
+  }
+  function tableMetaLabel(items){
+    const b = paymentBreakdown(items);
+    const parts = [];
+    if(b.cash>0) parts.push('Cash');
+    if(b.qris>0) parts.push('QRIS');
+    if(b.belum>0) parts.push(parts.length?'+blm bayar':'Belum Bayar');
+    return parts.join(' ') || 'Lunas';
   }
   function allPendingGroups(){
     let groups = [];
@@ -423,15 +437,15 @@
 
   function applyIncrement(items, m){
     let target=null;
-    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending'){ target=items[i]; break; } }
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending' && !items[i].paymentMethod){ target=items[i]; break; } }
     if(target){ target.qty += 1; return {mode:'update', item:target}; }
-    const newItem = {id:'it'+Date.now()+Math.random().toString(36).slice(2,6), menuId:m.id, name:m.name, price:m.price, qty:1, status:'pending', addedAt:Date.now()};
+    const newItem = {id:'it'+Date.now()+Math.random().toString(36).slice(2,6), menuId:m.id, name:m.name, price:m.price, qty:1, status:'pending', addedAt:Date.now(), paymentMethod:null};
     items.push(newItem);
     return {mode:'insert', item:newItem};
   }
   function applyDecrement(items, m){
     let idx=-1;
-    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending'){ idx=i; break; } }
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending' && !items[i].paymentMethod){ idx=i; break; } }
     if(idx===-1) return null;
     if(items[idx].qty>1){ items[idx].qty -=1; return {mode:'update', item:items[idx]}; }
     const removed = items[idx];
@@ -442,15 +456,13 @@
   // ---------- mutations (optimistic local update + supabase sync) ----------
   function incrementMenuQtyExisting(tableId, m){
     const o = ensureOrderLocal(tableId);
-    const wasEmpty = o.items.length===0;
     const res = applyIncrement(o.items, m);
-    o.paymentMethod = null;
     render();
     (async ()=>{
       try{
-        await sb.from('pos_orders').upsert({table_id:tableId, payment_method:null});
+        await sb.from('pos_orders').upsert({table_id:tableId});
         if(res.mode==='insert'){
-          await sb.from('pos_order_items').insert({id:res.item.id, table_id:tableId, menu_id:res.item.menuId, name:res.item.name, price:res.item.price, qty:res.item.qty, status:res.item.status, added_at:new Date(res.item.addedAt).toISOString()});
+          await sb.from('pos_order_items').insert({id:res.item.id, table_id:tableId, menu_id:res.item.menuId, name:res.item.name, price:res.item.price, qty:res.item.qty, status:res.item.status, added_at:new Date(res.item.addedAt).toISOString(), payment_method:null});
         } else {
           await sb.from('pos_order_items').update({qty:res.item.qty}).eq('id', res.item.id);
         }
@@ -491,23 +503,49 @@
       }catch(e){ reportError(e,'hapus item'); }
     })();
   }
-  function setPaymentMethod(tableId, method){
-    order(tableId).paymentMethod = method;
+  function unpaidLines(items){
+    return items.filter(it=>!it.paymentMethod);
+  }
+  async function processSplitPayment(tableId, selections, method){
+    // selections: [{itemId, qty}] qty = jumlah unit dari baris itu yang dibayar sekarang
+    const o = order(tableId); if(!o) return;
+    const dbOps = [];
+    selections.forEach(sel=>{
+      if(sel.qty<=0) return;
+      const item = o.items.find(i=>i.id===sel.itemId);
+      if(!item) return;
+      if(sel.qty>=item.qty){
+        item.paymentMethod = method;
+        dbOps.push(sb.from('pos_order_items').update({payment_method:method}).eq('id', item.id));
+      } else {
+        item.qty -= sel.qty;
+        const paidPortion = {
+          id:'it'+Date.now()+Math.random().toString(36).slice(2,6),
+          menuId:item.menuId, name:item.name, price:item.price, qty:sel.qty,
+          status:item.status, addedAt:item.addedAt, paymentMethod:method
+        };
+        o.items.push(paidPortion);
+        dbOps.push(sb.from('pos_order_items').update({qty:item.qty}).eq('id', item.id));
+        dbOps.push(sb.from('pos_order_items').insert({id:paidPortion.id, table_id:tableId, menu_id:paidPortion.menuId, name:paidPortion.name, price:paidPortion.price, qty:paidPortion.qty, status:paidPortion.status, added_at:new Date(paidPortion.addedAt).toISOString(), payment_method:method}));
+      }
+    });
     render();
-    sb.from('pos_orders').upsert({table_id:tableId, payment_method:method}).then(({error})=>{ if(error) reportError(error,'update pembayaran'); });
+    try{ await Promise.all(dbOps); }catch(e){ reportError(e,'proses pembayaran'); }
   }
   function closeTable(tableId){
     const o = order(tableId);
     const tname = tableById(tableId).name;
     const total = itemsTotal(o.items);
-    const snapshot = o.items.map(it=>({name:it.name, qty:it.qty, price:it.price, status:it.status}));
+    const snapshot = o.items.map(it=>({name:it.name, qty:it.qty, price:it.price, status:it.status, paymentMethod:it.paymentMethod}));
+    const methodsUsed = [...new Set(o.items.map(it=>it.paymentMethod).filter(Boolean))];
+    const paymentSummary = methodsUsed.length===0 ? null : methodsUsed.length===1 ? methodsUsed[0] : 'mixed';
     const openedAtIso = new Date(o.openedAt || Date.now()).toISOString();
     delete state.orders[tableId];
     openTableId=null;
     render();
     (async ()=>{
       try{
-        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:o.paymentMethod, opened_at:openedAtIso, closed_at:new Date().toISOString()});
+        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:paymentSummary, opened_at:openedAtIso, closed_at:new Date().toISOString()});
         await sb.from('pos_orders').delete().eq('table_id', tableId);
         showToast('Meja ditutup & direset');
       }catch(e){ reportError(e,'tutup meja'); }
@@ -553,19 +591,18 @@
   function finalizeNewOrder(){
     if(draftItems.length===0 || !draftTableId) return;
     const tid = draftTableId;
-    const items = draftItems;
     const method = draftPayment==='belum' ? null : draftPayment;
+    const items = draftItems.map(it=>({...it, paymentMethod: method}));
     const o = ensureOrderLocal(tid);
     o.items = o.items.concat(items);
-    o.paymentMethod = method;
     const tname = tableById(tid).name;
     newOrderActive=false; draftItems=[]; draftTableId=null; draftPayment='belum';
     render();
     (async ()=>{
       try{
-        await sb.from('pos_orders').upsert({table_id:tid, payment_method:method});
+        await sb.from('pos_orders').upsert({table_id:tid});
         await sb.from('pos_order_items').insert(items.map(it=>({
-          id:it.id, table_id:tid, menu_id:it.menuId, name:it.name, price:it.price, qty:it.qty, status:it.status, added_at:new Date(it.addedAt).toISOString()
+          id:it.id, table_id:tid, menu_id:it.menuId, name:it.name, price:it.price, qty:it.qty, status:it.status, added_at:new Date(it.addedAt).toISOString(), payment_method:it.paymentMethod
         })));
         showToast('Pesanan untuk Meja '+tname+' berhasil dibuat');
       }catch(e){ reportError(e,'buat pesanan baru'); }
@@ -618,6 +655,7 @@
     if(tableFormOpen) renderTableFormModal();
     if(menuFormOpen) renderMenuFormModal();
     if(confirmCloseTableId) renderConfirmCloseModal();
+    if(splitPayOpen) renderSplitPayModal();
   }
 
   function renderMapView(el){
@@ -649,7 +687,7 @@
       const itemCount = o ? o.items.length : 0;
       const pendingN = o ? o.items.filter(i=>i.status==='pending').length : 0;
       box.innerHTML = `<div class="topstrip" style="background:${tableColor(t.id)}"></div><div class="name">${t.name}</div>` +
-        (itemCount>0 ? `<div class="meta">${pendingN>0?pendingN+' blm antar':payLabel(o.paymentMethod)}</div>` : '');
+        (itemCount>0 ? `<div class="meta">${pendingN>0?pendingN+' blm antar':tableMetaLabel(o.items)}</div>` : '');
       if(editMode){
         const del = document.createElement('div'); del.className='del'; del.textContent='✕';
         del.onclick=(ev)=>{ ev.stopPropagation(); deleteTable(t.id); };
@@ -741,7 +779,8 @@
     const t = isNew ? (draftTableId ? tableById(draftTableId) : null) : tableById(openTableId);
     if(!isNew && !t){ openTableId=null; return; }
     const items = isNew ? draftItems : ensureOrderLocal(openTableId).items;
-    const paymentMethod = isNew ? draftPayment : (order(openTableId).paymentMethod || 'belum');
+    const paymentMethod = isNew ? draftPayment : null;
+    const breakdown = isNew ? null : paymentBreakdown(items);
     const total = itemsTotal(items);
     const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
     const filtered = state.menu.filter(m=>
@@ -786,7 +825,7 @@
               <div class="cart-item">
                 <div>
                   <div class="nm">${it.qty}x ${it.name}</div>
-                  <div class="sub">${fmtMoney(it.price*it.qty)} · ${it.status==='served'?'Diantar':timeAgo(it.addedAt)}</div>
+                  <div class="sub">${fmtMoney(it.price*it.qty)} · ${it.status==='served'?'Diantar':timeAgo(it.addedAt)}${!isNew && it.paymentMethod ? ' · '+(it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : ''}</div>
                 </div>
                 <div class="cart-item-right">
                   ${isNew ? '' : `<button class="status-pill ${it.status}" data-toggle="${it.id}">${it.status==='pending'?'Belum diantar':'✓ Diantar'}</button>`}
@@ -818,15 +857,17 @@
           </div>
           <button class="btn btn-purple" id="finishNewBtn" style="width:100%;" ${items.length===0 || !draftTableId ? 'disabled':''}>✓ Selesai Pesanan</button>
         ` : `
-          <div class="section-label">Pembayaran</div>
-          <div class="pay-row">
-            <button class="${paymentMethod==='belum'?'sel belum':''}" data-payexist="null">⏳<br/>Belum Bayar</button>
-            <button class="${paymentMethod==='cash'?'sel cash':''}" data-payexist="cash">💵<br/>Cash</button>
-            <button class="${paymentMethod==='qris'?'sel qris':''}" data-payexist="qris">📱<br/>QRIS</button>
+          <div class="section-label">Status Pembayaran</div>
+          <div style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">
+            ${breakdown.cash>0?`<div>💵 Cash: <b style="color:var(--ink);">${fmtMoney(breakdown.cash)}</b></div>`:''}
+            ${breakdown.qris>0?`<div>📱 QRIS: <b style="color:var(--ink);">${fmtMoney(breakdown.qris)}</b></div>`:''}
+            ${breakdown.belum>0?`<div>⏳ Belum bayar: <b style="color:var(--red);">${fmtMoney(breakdown.belum)}</b></div>`:''}
+            ${breakdown.cash===0 && breakdown.qris===0 && breakdown.belum===0 ? '<div>Belum ada item</div>' : ''}
           </div>
+          ${breakdown.belum>0 ? `<button class="btn btn-ghost" id="splitPayBtn" style="width:100%;margin-bottom:8px;">💳 Proses Pembayaran</button>` : ''}
           <button class="btn btn-ghost" id="finishExistBtn" style="width:100%;margin-bottom:8px;">✓ Selesai</button>
           <button class="btn btn-soft-red" id="cancelOrderBtn" style="width:100%;margin-bottom:8px;">Batalkan Pesanan</button>
-          <button class="btn btn-purple" id="closeTableBtn" style="width:100%;" ${items.length===0 || items.some(i=>i.status==='pending') || !order(openTableId).paymentMethod ? 'disabled':''}>Tutup Meja</button>
+          <button class="btn btn-purple" id="closeTableBtn" style="width:100%;" ${items.length===0 || items.some(i=>i.status==='pending') || breakdown.belum>0 ? 'disabled':''}>Tutup Meja</button>
         `}
       </div>
     `;
@@ -873,9 +914,8 @@
       const finishBtn = document.getElementById('finishNewBtn');
       if(finishBtn) finishBtn.onclick = finalizeNewOrder;
     } else {
-      screen.querySelectorAll('[data-payexist]').forEach(b=>{
-        b.onclick = ()=>{ const v = b.dataset.payexist; setPaymentMethod(openTableId, v==='null'?null:v); };
-      });
+      const spBtn = document.getElementById('splitPayBtn');
+      if(spBtn) spBtn.onclick = ()=>{ openSplitPay(openTableId); };
       document.getElementById('finishExistBtn').onclick = ()=>{ openTableId=null; render(); showToast('Pesanan disimpan'); };
       document.getElementById('cancelOrderBtn').onclick = ()=>{
         const tid = openTableId;
@@ -905,6 +945,74 @@
     document.getElementById('closeCC').onclick = ()=>{ confirmCloseTableId=null; render(); };
     document.getElementById('ccClose').onclick = ()=>{ const tid=confirmCloseTableId; confirmCloseTableId=null; closeTable(tid); };
     document.getElementById('ccDetail').onclick = ()=>{ openTableId=confirmCloseTableId; confirmCloseTableId=null; render(); };
+  }
+
+  function openSplitPay(tableId){
+    const o = order(tableId); if(!o) return;
+    const lines = unpaidLines(o.items);
+    if(lines.length===0) return;
+    const selections = {};
+    lines.forEach(it=>{ selections[it.id] = it.qty; }); // default: bayar penuh
+    splitPayOpen = { tableId, lines: lines.map(it=>({id:it.id, name:it.name, price:it.price, maxQty:it.qty})), selections, method:null };
+    render();
+  }
+  function renderSplitPayModal(){
+    const sp = splitPayOpen;
+    const total = sp.lines.reduce((s,l)=> s + l.price*(sp.selections[l.id]||0), 0);
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="width:380px;">
+        <button class="closeX" id="closeSP">✕</button>
+        <h2>Proses Pembayaran</h2>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px;">Atur jumlah yang dibayar customer ini. Sisa qty tetap kebawa belum bayar.</div>
+        <div style="max-height:260px;overflow-y:auto;margin-bottom:10px;">
+          ${sp.lines.map(l=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);">
+              <div style="flex:1;">
+                <div style="font-weight:700;font-size:13px;">${l.name}</div>
+                <div style="font-size:11px;color:var(--ink-soft);">${fmtMoney(l.price)} / unit · maks ${l.maxQty}</div>
+              </div>
+              <div class="qtystep" style="width:auto;gap:8px;">
+                <button class="qbtn" data-spdec="${l.id}">−</button>
+                <span class="qval">${sp.selections[l.id]||0}</span>
+                <button class="qbtn add" data-spinc="${l.id}">+</button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="total-row"><span>Total Dibayar</span><span>${fmtMoney(total)}</span></div>
+        <div class="pay-row">
+          <button class="${sp.method==='cash'?'sel cash':''}" data-spmethod="cash">💵<br/>Cash</button>
+          <button class="${sp.method==='qris'?'sel qris':''}" data-spmethod="qris">📱<br/>QRIS</button>
+        </div>
+        <button class="btn btn-purple" id="spConfirm" style="width:100%;" ${total<=0 || !sp.method ? 'disabled':''}>✓ Konfirmasi Bayar ${fmtMoney(total)}</button>
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeSP').onclick = ()=>{ splitPayOpen=null; render(); };
+    overlay.querySelectorAll('[data-spinc]').forEach(b=>{
+      b.onclick = ()=>{
+        const id=b.dataset.spinc; const line=sp.lines.find(l=>l.id===id);
+        sp.selections[id] = Math.min(line.maxQty, (sp.selections[id]||0)+1);
+        render();
+      };
+    });
+    overlay.querySelectorAll('[data-spdec]').forEach(b=>{
+      b.onclick = ()=>{
+        const id=b.dataset.spdec;
+        sp.selections[id] = Math.max(0, (sp.selections[id]||0)-1);
+        render();
+      };
+    });
+    overlay.querySelectorAll('[data-spmethod]').forEach(b=>{
+      b.onclick = ()=>{ sp.method = b.dataset.spmethod; render(); };
+    });
+    document.getElementById('spConfirm').onclick = async ()=>{
+      const tableId = sp.tableId, method = sp.method;
+      const selections = sp.lines.map(l=>({itemId:l.id, qty:sp.selections[l.id]||0}));
+      splitPayOpen = null;
+      await processSplitPayment(tableId, selections, method);
+      showToast('Pembayaran '+fmtMoney(total)+' ('+(method==='cash'?'Cash':'QRIS')+') tercatat');
+    };
   }
 
   function renderTableFormModal(){
