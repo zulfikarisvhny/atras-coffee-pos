@@ -1,0 +1,936 @@
+<div id="app"></div>
+<style>
+:root{
+  --bg:#F3F1FB;
+  --card:#FFFFFF;
+  --purple:#7C5CFC;
+  --purple-dark:#5B3FE0;
+  --purple-soft:#EEE9FE;
+  --ink:#23263A;
+  --ink-soft:#8D90A6;
+  --line:#ECEAF7;
+  --green:#28B978;
+  --green-soft:#E3F7EC;
+  --red:#E14F4B;
+  --red-soft:#FCE7E6;
+  --gold:#E0A526;
+  --gold-soft:#FBF0D9;
+  --shadow:0 4px 16px rgba(76,60,160,0.07);
+}
+*{box-sizing:border-box;}
+#app{
+  font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  background:var(--bg);
+  color:var(--ink);
+  width:100%;
+  max-width:1240px;
+  min-height:720px;
+  margin:0 auto;
+  border-radius:18px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+.header{
+  background:var(--card);
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:14px 24px;
+  gap:20px;
+}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand .logo{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,var(--purple),var(--purple-dark));
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.brand .name{font-weight:800;font-size:15px;line-height:1.1;}
+.brand .tag{font-size:11px;color:var(--ink-soft);}
+.navtabs{display:flex;gap:6px;}
+.navtabs button{
+  border:none;background:none;
+  padding:8px 14px;
+  font-size:13.5px;
+  font-weight:700;
+  color:var(--ink-soft);
+  border-radius:9px;
+  display:flex;align-items:center;gap:6px;
+  position:relative;
+}
+.navtabs button.active{ color:var(--purple-dark); background:var(--purple-soft); }
+.navtabs .badge{
+  background:var(--red);color:#fff;font-size:10px;font-weight:700;
+  border-radius:8px;padding:1px 6px;
+}
+.headerright{display:flex;align-items:center;gap:10px;}
+.pillinfo{
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:7px 12px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--ink-soft);
+  display:flex;align-items:center;gap:6px;
+  white-space:nowrap;
+}
+.profile{display:flex;align-items:center;gap:8px;}
+.profile .av{
+  width:34px;height:34px;border-radius:50%;
+  background:var(--purple-soft);
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+}
+.profile .pn{font-size:12.5px;font-weight:700;line-height:1.2;}
+.profile .pr{font-size:10.5px;color:var(--ink-soft);}
+
+.body{flex:1; padding:18px 24px 22px; overflow-y:auto; position:relative;}
+
+.toolrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;}
+.toolrow .hint{font-size:13px;color:var(--ink-soft);}
+.toolrow .right-tools{display:flex;gap:8px;}
+.btn{
+  border:none;border-radius:11px;padding:9px 16px;
+  font-size:13px;font-weight:700;cursor:pointer;
+}
+.btn-purple{background:var(--purple); color:#fff;}
+.btn-purple:disabled{background:#D8D3F6;cursor:not-allowed;}
+.btn-ghost{background:var(--purple-soft); color:var(--purple-dark);}
+.btn-line{background:#fff;border:1px solid var(--line); color:var(--ink-soft);}
+.btn-soft-red{background:var(--red-soft);color:var(--red);}
+.btn-soft-green{background:var(--green-soft);color:var(--green);}
+
+.canvas{
+  position:relative;
+  width:100%;
+  height:500px;
+  background:
+    linear-gradient(var(--line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  background-color: var(--card);
+  border-radius:16px;
+  border:1px solid var(--line);
+  overflow:hidden;
+}
+.table-box{
+  position:absolute;
+  width:88px;height:88px;
+  border-radius:14px;
+  background:#fff;
+  border:2px solid var(--line);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transform:translate(-50%,-50%);
+  touch-action:none; user-select:none;
+  box-shadow:var(--shadow);
+  color:var(--ink-soft);
+}
+.table-box .topstrip{
+  position:absolute; top:-2px; left:8px; right:8px; height:5px; border-radius:0 0 4px 4px;
+}
+.table-box .name{font-weight:800;font-size:15px;}
+.table-box .meta{font-size:10px;margin-top:3px;font-weight:700;text-align:center;padding:0 4px;}
+.table-box.pending{ background:var(--red); border-color:var(--red); color:#fff; }
+.table-box.unpaid{ background:var(--gold); border-color:var(--gold); color:#fff; }
+.table-box.done{ background:var(--green); border-color:var(--green); color:#fff; }
+.table-box .del{
+  position:absolute;top:-8px;right:-8px;width:21px;height:21px;border-radius:50%;
+  background:var(--ink);color:#fff;font-size:12px;
+  display:flex;align-items:center;justify-content:center;
+}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:14px;font-size:12px;color:var(--ink-soft);}
+.legend span{display:flex;align-items:center;gap:6px;}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+
+.chiprow{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+.chip{
+  flex:0 0 auto;
+  background:#fff;border:1px solid var(--line);
+  border-radius:13px;padding:10px 16px;
+  font-size:12.5px;font-weight:700;color:var(--ink-soft);
+  text-align:center;min-width:88px;cursor:pointer;
+}
+.chip.active{background:var(--purple-soft); border-color:var(--purple); color:var(--purple-dark);}
+
+.searchbar{
+  display:flex; align-items:center; gap:8px;
+  background:#fff;border:1px solid var(--line); border-radius:12px;
+  padding:10px 14px; margin-bottom:14px; max-width:340px;
+}
+.searchbar input{border:none;outline:none;font-size:13px;width:100%;background:transparent;}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(150px,1fr));
+  gap:14px;
+}
+.fcard{
+  background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:12px; box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:6px;
+}
+.fcard .icowrap{
+  width:100%; height:64px; border-radius:10px;
+  background:var(--purple-soft);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+}
+.fcard .fnm{font-weight:800;font-size:13px;line-height:1.25;min-height:34px;}
+.fcard .fpr{font-weight:800;font-size:13.5px;}
+.fcard .availbadge{
+  align-self:flex-start;
+  font-size:10px;font-weight:700;
+  border-radius:8px;padding:2px 8px;
+}
+.fcard .availbadge.av{background:var(--green-soft);color:var(--green);}
+.fcard .qtystep{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
+.qbtn{
+  width:28px;height:28px;border-radius:9px;border:none;
+  background:var(--purple-soft); color:var(--purple-dark); font-weight:800;font-size:15px;
+}
+.qbtn.add{background:var(--purple);color:#fff;}
+.qval{font-weight:800;font-size:14px;}
+
+.orderscreen{
+  position:absolute; inset:0; background:var(--bg);
+  display:flex; z-index:40;
+}
+.ordermain{flex:1; padding:18px 20px; overflow-y:auto;}
+.ordercart{
+  width:340px; flex:0 0 340px; background:#fff;
+  border-left:1px solid var(--line);
+  display:flex; flex-direction:column;
+  padding:18px 18px 16px;
+  overflow-y:auto;
+}
+.backrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.backbtn{
+  border:1px solid var(--line); background:#fff; border-radius:10px;
+  padding:7px 12px; font-size:13px;font-weight:700;color:var(--ink-soft);
+}
+.stepbadge{
+  font-size:10.5px;font-weight:800;color:var(--purple-dark);background:var(--purple-soft);
+  border-radius:8px;padding:3px 9px;
+}
+.cart-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
+.cart-head h3{margin:0;font-size:16px;}
+.cart-list{margin:8px 0; max-height:220px; overflow-y:auto;}
+.cart-item{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:9px 0;border-bottom:1px solid var(--line);
+}
+.cart-item .nm{font-weight:700;font-size:13px;}
+.cart-item .sub{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
+.status-pill{
+  font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:20px;border:none;white-space:nowrap;
+}
+.status-pill.pending{background:var(--red-soft); color:var(--red);}
+.status-pill.served{background:var(--green-soft); color:var(--green);}
+.cart-item-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
+.rm-x{color:var(--ink-soft);font-size:11px;cursor:pointer;}
+.cart-empty{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:20px 0;}
+.total-row{display:flex;justify-content:space-between;font-weight:800;font-size:15px;padding:9px 0 8px;border-top:1px solid var(--line);}
+.section-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin:10px 0 7px;}
+.pay-row{display:flex;gap:7px;margin-bottom:8px;}
+.pay-row button{
+  flex:1;padding:9px 4px;border-radius:10px;font-size:12px;font-weight:700;
+  border:1px solid var(--line);background:#fff;color:var(--ink-soft);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+}
+.pay-row button.sel.belum{background:var(--gold-soft);border-color:var(--gold);color:var(--gold);}
+.pay-row button.sel.cash{background:var(--green-soft);border-color:var(--green);color:var(--green);}
+.pay-row button.sel.qris{background:var(--purple-soft);border-color:var(--purple);color:var(--purple-dark);}
+
+.tablepick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:6px;}
+.tablepick{
+  position:relative;
+  border-radius:10px; border:2px solid var(--line); background:#fff;
+  padding:9px 4px; text-align:center; font-size:12px; font-weight:800; color:var(--ink-soft);
+}
+.tablepick .swatch{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
+.tablepick.sel{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
+.tablepick.occupied{opacity:.4; cursor:not-allowed;}
+.tablepick .occ-tag{display:block;font-size:9px;font-weight:700;color:var(--red);margin-top:1px;}
+
+.pending-group{
+  border-radius:14px; border:1px solid var(--line); background:#fff;
+  margin-bottom:14px; overflow:hidden; box-shadow:var(--shadow);
+}
+.pending-group .ghead{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 16px; color:#fff; font-weight:800; font-size:13.5px;
+}
+.pending-group .gbody{padding:4px 16px 6px;}
+.pending-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:10px 0; border-bottom:1px solid var(--line);
+}
+.pending-row:last-child{border-bottom:none;}
+.pending-row .nm{font-weight:700;font-size:13.5px;}
+.pending-row .wait{font-size:11px;color:var(--ink-soft);margin-top:1px;}
+.empty-state{text-align:center;color:var(--ink-soft);font-size:13.5px;padding:60px 10px;}
+
+.menurow{
+  background:#fff;border:1px solid var(--line);border-radius:13px;
+  padding:12px 16px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;
+}
+.menurow .nm{font-weight:800;font-size:14px;}
+.menurow .cat{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
+.menurow .pr{font-weight:700;font-size:13px;color:var(--ink-soft);margin-right:10px;}
+
+.overlay{position:absolute;inset:0;background:rgba(35,38,58,0.45);display:flex;align-items:center;justify-content:center;z-index:60;}
+.modal{background:#fff;border-radius:16px;padding:20px 22px;width:340px;}
+.modal h2{margin:0 0 12px;font-size:16px;}
+.formrow{margin-bottom:11px;}
+.formrow label{font-size:11.5px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px;}
+.formrow input{
+  width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);
+  font-size:13.5px;background:#FAFAFD;color:var(--ink);
+}
+.modal-actions{display:flex;gap:8px;margin-top:14px;}
+.modal-actions .btn{flex:1;}
+.closeX{
+  background:var(--bg);border:none;border-radius:50%;width:28px;height:28px;font-size:13px;color:var(--ink-soft);
+  float:right;
+}
+.toast{
+  position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  background:var(--ink);color:#fff;padding:9px 18px;border-radius:20px;font-size:12.5px;
+  z-index:90;opacity:0;transition:opacity .25s; white-space:nowrap;
+}
+.toast.show{opacity:1;}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  const app = document.getElementById('app');
+  const CAT_ICON = {'Noodles':'🍜','Snack':'🍘','Add On':'➕','Classic Coffee':'☕','Kopi Susu':'🧋','Coffee Mocktails':'🍹','Milk Based':'🥛','Refreshments':'🍋'};
+  const PALETTE = ['#7C5CFC','#FF7A59','#16A3B8','#E0A526','#3D8BFD','#E14F4B','#28B978','#B33DC6','#0EA5E9','#D6336C','#2F9E44','#5B3FE0'];
+
+  const SUPABASE_URL = 'https://vchqvbnkhssauuxyxaoa.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_LHs-GJfbb8vmNebtWtI2tA_Ln_biOqR';
+  let sb = null;
+  let dbReady = false;
+  let dbErrorMsg = '';
+  try{
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  }catch(e){
+    dbErrorMsg = 'Library Supabase gagal dimuat. Buka file ini di luar Claude (misal lewat Vercel) supaya bisa konek ke database.';
+  }
+
+  let state = { tables: [], menu: [], orders: {} };
+
+  let view = 'map';
+  let editMode = false;
+  let openTableId = null;
+  let newOrderActive = false;
+  let draftItems = [];
+  let draftTableId = null;
+  let draftPayment = 'belum';
+  let orderSearch = '';
+  let orderCatFilter = 'Semua';
+  let menuCatFilter = 'Semua';
+  let menuFormOpen = null;
+  let tableFormOpen = null;
+  let toastTimer = null;
+
+  function showToast(msg){
+    const t = document.getElementById('toastEl');
+    if(t){ t.textContent = msg; t.classList.add('show'); }
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(()=>{ const el=document.getElementById('toastEl'); if(el) el.classList.remove('show'); }, 1700);
+  }
+  function reportError(err, label){
+    console.error(label, err);
+    showToast('Gagal sync ke database ('+label+')');
+  }
+
+  // ---------- load from Supabase ----------
+  async function loadState(){
+    if(!sb){ render(); return; }
+    try{
+      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}] = await Promise.all([
+        sb.from('pos_tables').select('*'),
+        sb.from('pos_menu').select('*'),
+        sb.from('pos_orders').select('*'),
+        sb.from('pos_order_items').select('*')
+      ]);
+      if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
+      state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
+      state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
+      state.orders = {};
+      (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], paymentMethod:o.payment_method||null}; });
+      (items||[]).forEach(it=>{
+        if(!state.orders[it.table_id]) state.orders[it.table_id] = {items:[], paymentMethod:null};
+        state.orders[it.table_id].items.push({
+          id: it.id, menuId: it.menu_id, name: it.name, price: it.price, qty: it.qty,
+          status: it.status, addedAt: new Date(it.added_at).getTime()
+        });
+      });
+      dbReady = true;
+    }catch(e){
+      dbErrorMsg = 'Gagal mengambil data dari Supabase. Cek koneksi internet atau jalankan file ini lewat hosting (Vercel), bukan dari dalam Claude.';
+      console.error(e);
+    }
+    render();
+  }
+
+  function order(tableId){ return state.orders[tableId]; }
+  function ensureOrderLocal(tableId){ if(!state.orders[tableId]) state.orders[tableId]={items:[],paymentMethod:null}; return state.orders[tableId]; }
+  function tableById(id){ return state.tables.find(t=>t.id===id); }
+  function tableColor(tableId){
+    const idx = state.tables.findIndex(t=>t.id===tableId);
+    return PALETTE[(idx<0?0:idx) % PALETTE.length];
+  }
+  function fmtMoney(n){ return 'Rp' + n.toLocaleString('id-ID'); }
+  function itemsTotal(items){ return items.reduce((s,it)=>s+it.price*it.qty,0); }
+  function timeAgo(ts){
+    const mins = Math.floor((Date.now()-ts)/60000);
+    if(mins<1) return 'baru saja';
+    if(mins===1) return '1 menit lalu';
+    return mins+' menit lalu';
+  }
+  function tableStatus(tableId){
+    const o = order(tableId);
+    if(!o || o.items.length===0) return 'empty';
+    if(o.items.some(it=>it.status==='pending')) return 'pending';
+    if(!o.paymentMethod) return 'unpaid';
+    return 'done';
+  }
+  function payLabel(method){
+    if(method==='cash') return 'Cash';
+    if(method==='qris') return 'QRIS';
+    return 'Belum Bayar';
+  }
+  function allPendingGroups(){
+    let groups = [];
+    Object.keys(state.orders).forEach(tid=>{
+      const pend = state.orders[tid].items.filter(it=>it.status==='pending');
+      if(pend.length===0) return;
+      pend.sort((a,b)=>a.addedAt-b.addedAt);
+      groups.push({ tableId:tid, tableName: tableById(tid)?tableById(tid).name:'?', items:pend, earliest: pend[0].addedAt });
+    });
+    groups.sort((a,b)=>a.earliest-b.earliest);
+    return groups;
+  }
+  function pendingCountTotal(){
+    return Object.values(state.orders).reduce((s,o)=>s+o.items.filter(i=>i.status==='pending').length,0);
+  }
+  function displayQtyFor(items, menuId){ return items.filter(it=>it.menuId===menuId).reduce((s,it)=>s+it.qty,0); }
+
+  function applyIncrement(items, m){
+    let target=null;
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending'){ target=items[i]; break; } }
+    if(target){ target.qty += 1; return {mode:'update', item:target}; }
+    const newItem = {id:'it'+Date.now()+Math.random().toString(36).slice(2,6), menuId:m.id, name:m.name, price:m.price, qty:1, status:'pending', addedAt:Date.now()};
+    items.push(newItem);
+    return {mode:'insert', item:newItem};
+  }
+  function applyDecrement(items, m){
+    let idx=-1;
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending'){ idx=i; break; } }
+    if(idx===-1) return null;
+    if(items[idx].qty>1){ items[idx].qty -=1; return {mode:'update', item:items[idx]}; }
+    const removed = items[idx];
+    items.splice(idx,1);
+    return {mode:'delete', item:removed};
+  }
+
+  // ---------- mutations (optimistic local update + supabase sync) ----------
+  function incrementMenuQtyExisting(tableId, m){
+    const o = ensureOrderLocal(tableId);
+    const wasEmpty = o.items.length===0;
+    const res = applyIncrement(o.items, m);
+    o.paymentMethod = null;
+    render();
+    (async ()=>{
+      try{
+        await sb.from('pos_orders').upsert({table_id:tableId, payment_method:null});
+        if(res.mode==='insert'){
+          await sb.from('pos_order_items').insert({id:res.item.id, table_id:tableId, menu_id:res.item.menuId, name:res.item.name, price:res.item.price, qty:res.item.qty, status:res.item.status, added_at:new Date(res.item.addedAt).toISOString()});
+        } else {
+          await sb.from('pos_order_items').update({qty:res.item.qty}).eq('id', res.item.id);
+        }
+      }catch(e){ reportError(e,'tambah item'); }
+    })();
+  }
+  function decrementMenuQtyExisting(tableId, m){
+    const o = order(tableId); if(!o) return;
+    const res = applyDecrement(o.items, m);
+    if(!res) return;
+    const nowEmpty = o.items.length===0;
+    render();
+    (async ()=>{
+      try{
+        if(res.mode==='update'){
+          await sb.from('pos_order_items').update({qty:res.item.qty}).eq('id', res.item.id);
+        } else {
+          await sb.from('pos_order_items').delete().eq('id', res.item.id);
+          if(nowEmpty) await sb.from('pos_orders').delete().eq('table_id', tableId);
+        }
+      }catch(e){ reportError(e,'kurangi item'); }
+    })();
+  }
+  function toggleItemStatus(tableId, itemId){
+    const o = order(tableId); const it = o.items.find(i=>i.id===itemId);
+    it.status = it.status==='pending'?'served':'pending';
+    render();
+    sb.from('pos_order_items').update({status:it.status}).eq('id', itemId).then(({error})=>{ if(error) reportError(error,'update status'); });
+  }
+  function removeItem(tableId, itemId){
+    const o = order(tableId); o.items = o.items.filter(i=>i.id!==itemId);
+    const nowEmpty = o.items.length===0;
+    render();
+    (async ()=>{
+      try{
+        await sb.from('pos_order_items').delete().eq('id', itemId);
+        if(nowEmpty) await sb.from('pos_orders').delete().eq('table_id', tableId);
+      }catch(e){ reportError(e,'hapus item'); }
+    })();
+  }
+  function setPaymentMethod(tableId, method){
+    order(tableId).paymentMethod = method;
+    render();
+    sb.from('pos_orders').upsert({table_id:tableId, payment_method:method}).then(({error})=>{ if(error) reportError(error,'update pembayaran'); });
+  }
+  function closeTable(tableId){
+    const o = order(tableId);
+    const tname = tableById(tableId).name;
+    const total = itemsTotal(o.items);
+    const snapshot = o.items.map(it=>({name:it.name, qty:it.qty, price:it.price, status:it.status}));
+    delete state.orders[tableId];
+    openTableId=null;
+    render();
+    (async ()=>{
+      try{
+        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:o.paymentMethod});
+        await sb.from('pos_orders').delete().eq('table_id', tableId);
+        showToast('Meja ditutup & direset');
+      }catch(e){ reportError(e,'tutup meja'); }
+    })();
+  }
+  function addTable(name,x,y){
+    const id = 't'+Date.now();
+    state.tables.push({id,name,x,y});
+    render();
+    sb.from('pos_tables').insert({id,name,x,y}).then(({error})=>{ if(error) reportError(error,'tambah meja'); });
+  }
+  function moveTableCommit(id,x,y){
+    sb.from('pos_tables').update({x,y}).eq('id', id).then(({error})=>{ if(error) reportError(error,'geser meja'); });
+  }
+  function deleteTable(id){
+    state.tables = state.tables.filter(t=>t.id!==id);
+    delete state.orders[id];
+    render();
+    sb.from('pos_tables').delete().eq('id', id).then(({error})=>{ if(error) reportError(error,'hapus meja'); });
+  }
+  function addMenuItem(name,price,cat){
+    const id = 'm'+Date.now();
+    state.menu.push({id,name,price,cat});
+    render();
+    sb.from('pos_menu').insert({id,name,price,category:cat}).then(({error})=>{ if(error) reportError(error,'tambah menu'); });
+  }
+  function updateMenuItem(id,name,price,cat){
+    const m=state.menu.find(x=>x.id===id); m.name=name;m.price=price;m.cat=cat;
+    render();
+    sb.from('pos_menu').update({name,price,category:cat}).eq('id', id).then(({error})=>{ if(error) reportError(error,'update menu'); });
+  }
+  function deleteMenuItem(id){
+    state.menu = state.menu.filter(m=>m.id!==id);
+    render();
+    sb.from('pos_menu').delete().eq('id', id).then(({error})=>{ if(error) reportError(error,'hapus menu'); });
+  }
+
+  function startNewOrder(){
+    newOrderActive = true; draftItems = []; draftTableId = null; draftPayment = 'belum';
+    orderSearch=''; orderCatFilter='Semua';
+    render();
+  }
+  function finalizeNewOrder(){
+    if(draftItems.length===0 || !draftTableId) return;
+    const tid = draftTableId;
+    const items = draftItems;
+    const method = draftPayment==='belum' ? null : draftPayment;
+    const o = ensureOrderLocal(tid);
+    o.items = o.items.concat(items);
+    o.paymentMethod = method;
+    const tname = tableById(tid).name;
+    newOrderActive=false; draftItems=[]; draftTableId=null; draftPayment='belum';
+    render();
+    (async ()=>{
+      try{
+        await sb.from('pos_orders').upsert({table_id:tid, payment_method:method});
+        await sb.from('pos_order_items').insert(items.map(it=>({
+          id:it.id, table_id:tid, menu_id:it.menuId, name:it.name, price:it.price, qty:it.qty, status:it.status, added_at:new Date(it.addedAt).toISOString()
+        })));
+        showToast('Pesanan untuk Meja '+tname+' berhasil dibuat');
+      }catch(e){ reportError(e,'buat pesanan baru'); }
+    })();
+  }
+
+  function render(){
+    if(dbErrorMsg && !dbReady){
+      app.innerHTML = `<div style="padding:40px;text-align:center;color:#8D90A6;font-family:sans-serif;">
+        <div style="font-size:32px;margin-bottom:10px;">⚠️</div>
+        <div style="font-weight:700;color:#23263A;margin-bottom:6px;">Belum bisa konek ke database</div>
+        <div style="font-size:13px;max-width:360px;margin:0 auto;">${dbErrorMsg}</div>
+      </div>`;
+      return;
+    }
+    const pendingCount = pendingCountTotal();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('id-ID', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
+    const timeStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
+
+    app.innerHTML = `
+      <div class="header">
+        <div class="brand">
+          <div class="logo">☕</div>
+          <div><div class="name">Atras Coffee</div><div class="tag">Order & Serve Tracker</div></div>
+        </div>
+        <div class="navtabs">
+          <button data-nav="map" class="${view==='map'?'active':''}">🗺️ Meja</button>
+          <button data-nav="pending" class="${view==='pending'?'active':''}">⏳ Pending ${pendingCount>0?`<span class="badge">${pendingCount}</span>`:''}</button>
+          <button data-nav="menu" class="${view==='menu'?'active':''}">📋 Menu</button>
+        </div>
+        <div class="headerright">
+          <div class="pillinfo">📅 ${dateStr}</div>
+          <div class="pillinfo">🕐 ${timeStr}</div>
+          <div class="profile"><div class="av">👤</div><div><div class="pn">Barista</div><div class="pr">On Duty</div></div></div>
+        </div>
+      </div>
+      <div class="body" id="bodyArea"></div>
+      <div class="toast" id="toastEl"></div>
+    `;
+    document.querySelectorAll('[data-nav]').forEach(b=>{ b.onclick=()=>{ view=b.dataset.nav; render(); }; });
+
+    const bodyArea = document.getElementById('bodyArea');
+    if(view==='map') renderMapView(bodyArea);
+    if(view==='pending') renderPendingView(bodyArea);
+    if(view==='menu') renderMenuView(bodyArea);
+
+    if(newOrderActive) renderOrderScreen('new');
+    else if(openTableId) renderOrderScreen('existing');
+    if(tableFormOpen) renderTableFormModal();
+    if(menuFormOpen) renderMenuFormModal();
+  }
+
+  function renderMapView(el){
+    el.innerHTML = `
+      <div class="toolrow">
+        <div class="hint">${editMode ? 'Tap area kosong = tambah meja. Geser kotak untuk atur posisi sesuai layout asli.' : 'Pesanan baru dimulai dari menu, bukan dari meja. Tap meja yang sudah terisi untuk kelola pesanannya.'}</div>
+        <div class="right-tools">
+          <button class="btn btn-purple" id="newOrderBtn">+ Pesanan Baru</button>
+          <button class="btn ${editMode?'btn-purple':'btn-line'}" id="editBtn">${editMode?'✓ Selesai Atur':'✏️ Atur Layout'}</button>
+        </div>
+      </div>
+      <div class="canvas" id="canvas"></div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--line)"></i>Kosong</span>
+        <span><i class="dot" style="background:var(--red)"></i>Ada yang belum diantar</span>
+        <span><i class="dot" style="background:var(--gold)"></i>Sudah diantar, belum bayar</span>
+        <span><i class="dot" style="background:var(--green)"></i>Lunas</span>
+      </div>
+    `;
+    document.getElementById('newOrderBtn').onclick = startNewOrder;
+    document.getElementById('editBtn').onclick = ()=>{ editMode=!editMode; render(); };
+    const canvas = document.getElementById('canvas');
+    state.tables.forEach(t=>{
+      const status = tableStatus(t.id);
+      const box = document.createElement('div');
+      box.className = 'table-box ' + status;
+      box.style.left = t.x+'%'; box.style.top = t.y+'%';
+      const o = order(t.id);
+      const itemCount = o ? o.items.length : 0;
+      const pendingN = o ? o.items.filter(i=>i.status==='pending').length : 0;
+      box.innerHTML = `<div class="topstrip" style="background:${tableColor(t.id)}"></div><div class="name">${t.name}</div>` +
+        (itemCount>0 ? `<div class="meta">${pendingN>0?pendingN+' blm antar':payLabel(o.paymentMethod)}</div>` : '');
+      if(editMode){
+        const del = document.createElement('div'); del.className='del'; del.textContent='✕';
+        del.onclick=(ev)=>{ ev.stopPropagation(); deleteTable(t.id); };
+        box.appendChild(del);
+        makeDraggable(box,t,canvas);
+      } else {
+        box.onclick = ()=>{
+          if(status==='empty'){ showToast('Meja kosong — mulai pesanan baru dari tombol "+ Pesanan Baru"'); return; }
+          openTableId=t.id; render();
+        };
+      }
+      canvas.appendChild(box);
+    });
+    canvas.onclick = (ev)=>{
+      if(!editMode || ev.target!==canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.round(((ev.clientX-rect.left)/rect.width)*100);
+      const y = Math.round(((ev.clientY-rect.top)/rect.height)*100);
+      tableFormOpen = {x,y}; render();
+    };
+  }
+
+  function makeDraggable(box,t,canvas){
+    let dragging=false;
+    box.addEventListener('pointerdown',(ev)=>{ dragging=true; box.setPointerCapture(ev.pointerId); });
+    box.addEventListener('pointermove',(ev)=>{
+      if(!dragging) return;
+      const rect = canvas.getBoundingClientRect();
+      let x = ((ev.clientX-rect.left)/rect.width)*100;
+      let y = ((ev.clientY-rect.top)/rect.height)*100;
+      x = Math.max(3, Math.min(97,x)); y = Math.max(5, Math.min(95,y));
+      box.style.left=x+'%'; box.style.top=y+'%'; t.x=x; t.y=y;
+    });
+    box.addEventListener('pointerup', ()=>{ if(dragging){ dragging=false; moveTableCommit(t.id, t.x, t.y); } });
+  }
+
+  function renderPendingView(el){
+    const groups = allPendingGroups();
+    if(groups.length===0){ el.innerHTML = `<div class="empty-state">🎉 Tidak ada pesanan yang nunggu diantar.</div>`; return; }
+    el.innerHTML = groups.map(g=>{
+      const color = tableColor(g.tableId);
+      return `
+      <div class="pending-group">
+        <div class="ghead" style="background:${color}">
+          <span>MEJA ${g.tableName}</span>
+          <span>${g.items.length} item belum diantar</span>
+        </div>
+        <div class="gbody">
+          ${g.items.map(it=>`
+            <div class="pending-row">
+              <div>
+                <div class="nm">${it.qty}x ${it.name}</div>
+                <div class="wait">${timeAgo(it.addedAt)}</div>
+              </div>
+              <button class="btn btn-soft-green" data-served="${g.tableId}|${it.id}">✓ Sudah Diantar</button>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;}).join('');
+    el.querySelectorAll('[data-served]').forEach(b=>{
+      b.onclick = ()=>{ const [tid,iid]=b.dataset.served.split('|'); toggleItemStatus(tid,iid); showToast('Ditandai sudah diantar'); };
+    });
+  }
+
+  function renderMenuView(el){
+    const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
+    let html = `<div class="toolrow"><div class="hint">Kelola daftar menu & harga</div><button class="btn btn-purple" id="addMenuBtn">+ Tambah Menu</button></div>`;
+    html += `<div class="chiprow">` + cats.map(c=>`<div class="chip ${menuCatFilter===c?'active':''}" data-mcat="${c}">${c}</div>`).join('') + `</div>`;
+    const list = state.menu.filter(m=> menuCatFilter==='Semua' || m.cat===menuCatFilter);
+    html += list.map(m=>`
+      <div class="menurow">
+        <div><div class="nm">${CAT_ICON[m.cat]||'🍴'} ${m.name}</div><div class="cat">${m.cat}</div></div>
+        <div style="display:flex;align-items:center;">
+          <div class="pr">${fmtMoney(m.price)}</div>
+          <button class="btn btn-line" data-editmenu="${m.id}">Edit</button>
+        </div>
+      </div>
+    `).join('');
+    el.innerHTML = html;
+    document.getElementById('addMenuBtn').onclick = ()=>{ menuFormOpen={}; render(); };
+    el.querySelectorAll('[data-mcat]').forEach(c=>{ c.onclick=()=>{ menuCatFilter=c.dataset.mcat; render(); }; });
+    el.querySelectorAll('[data-editmenu]').forEach(b=>{ b.onclick=()=>{ menuFormOpen = state.menu.find(m=>m.id===b.dataset.editmenu); render(); }; });
+  }
+
+  function renderOrderScreen(mode){
+    const isNew = mode==='new';
+    const t = isNew ? (draftTableId ? tableById(draftTableId) : null) : tableById(openTableId);
+    if(!isNew && !t){ openTableId=null; return; }
+    const items = isNew ? draftItems : ensureOrderLocal(openTableId).items;
+    const paymentMethod = isNew ? draftPayment : (order(openTableId).paymentMethod || 'belum');
+    const total = itemsTotal(items);
+    const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
+    const filtered = state.menu.filter(m=>
+      (orderCatFilter==='Semua' || m.cat===orderCatFilter) &&
+      m.name.toLowerCase().includes(orderSearch.toLowerCase())
+    );
+
+    const screen = document.createElement('div');
+    screen.className = 'orderscreen';
+    screen.innerHTML = `
+      <div class="ordermain">
+        <div class="backrow">
+          <button class="backbtn" id="backBtn">← Kembali</button>
+          <div style="font-weight:800;font-size:15px;">${isNew ? '1. Pilih Menu' : 'Meja '+t.name}</div>
+          ${isNew ? '<span class="stepbadge">Pesanan Baru</span>' : ''}
+        </div>
+        <div class="searchbar">🔍<input id="orderSearchInput" placeholder="Cari menu..." value="${orderSearch}"/></div>
+        <div class="chiprow">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c}</div>`).join('')}</div>
+        <div class="grid">
+          ${filtered.map(m=>{
+            const qty = displayQtyFor(items, m.id);
+            return `
+            <div class="fcard">
+              <div class="icowrap">${CAT_ICON[m.cat]||'🍴'}</div>
+              <div class="availbadge av">Tersedia</div>
+              <div class="fnm">${m.name}</div>
+              <div class="fpr">${fmtMoney(m.price)}</div>
+              <div class="qtystep">
+                <button class="qbtn" data-dec="${m.id}">−</button>
+                <span class="qval">${qty}</span>
+                <button class="qbtn add" data-inc="${m.id}">+</button>
+              </div>
+            </div>`;
+          }).join('') || '<div class="empty-state">Menu tidak ditemukan.</div>'}
+        </div>
+      </div>
+      <div class="ordercart">
+        <div class="cart-head"><h3>Pesanan</h3><span style="font-size:12px;color:var(--ink-soft);">${items.length} item</span></div>
+        <div class="cart-list">
+          ${items.length===0 ? '<div class="cart-empty">Belum ada pesanan.<br/>Tap menu di kiri untuk menambah.</div>' :
+            items.map(it=>`
+              <div class="cart-item">
+                <div>
+                  <div class="nm">${it.qty}x ${it.name}</div>
+                  <div class="sub">${fmtMoney(it.price*it.qty)} · ${it.status==='served'?'Diantar':timeAgo(it.addedAt)}</div>
+                </div>
+                <div class="cart-item-right">
+                  ${isNew ? '' : `<button class="status-pill ${it.status}" data-toggle="${it.id}">${it.status==='pending'?'Belum diantar':'✓ Diantar'}</button>`}
+                  <span class="rm-x" data-rm="${it.id}">Hapus ✕</span>
+                </div>
+              </div>
+            `).join('')
+          }
+        </div>
+        <div class="total-row"><span>Total</span><span>${fmtMoney(total)}</span></div>
+
+        ${isNew ? `
+          <div class="section-label">2. Pilih Meja</div>
+          <div class="tablepick-grid">
+            ${state.tables.map(tb=>{
+              const occ = tableStatus(tb.id)!=='empty';
+              const sel = draftTableId===tb.id;
+              return `<div class="tablepick ${sel?'sel':''} ${occ?'occupied':''}" data-pick-table="${tb.id}">
+                <span class="swatch" style="background:${tableColor(tb.id)}"></span>${tb.name}
+                ${occ?'<span class="occ-tag">terisi</span>':''}
+              </div>`;
+            }).join('')}
+          </div>
+          <div class="section-label">3. Pembayaran</div>
+          <div class="pay-row">
+            <button class="${paymentMethod==='belum'?'sel belum':''}" data-paynew="belum">⏳<br/>Belum Bayar</button>
+            <button class="${paymentMethod==='cash'?'sel cash':''}" data-paynew="cash">💵<br/>Cash</button>
+            <button class="${paymentMethod==='qris'?'sel qris':''}" data-paynew="qris">📱<br/>QRIS</button>
+          </div>
+          <button class="btn btn-purple" id="finishNewBtn" style="width:100%;" ${items.length===0 || !draftTableId ? 'disabled':''}>✓ Selesai Pesanan</button>
+        ` : `
+          <div class="section-label">Pembayaran</div>
+          <div class="pay-row">
+            <button class="${paymentMethod==='belum'?'sel belum':''}" data-payexist="null">⏳<br/>Belum Bayar</button>
+            <button class="${paymentMethod==='cash'?'sel cash':''}" data-payexist="cash">💵<br/>Cash</button>
+            <button class="${paymentMethod==='qris'?'sel qris':''}" data-payexist="qris">📱<br/>QRIS</button>
+          </div>
+          <button class="btn btn-ghost" id="finishExistBtn" style="width:100%;margin-bottom:8px;">✓ Selesai</button>
+          <button class="btn btn-soft-red" id="cancelOrderBtn" style="width:100%;margin-bottom:8px;">Batalkan Pesanan</button>
+          <button class="btn btn-purple" id="closeTableBtn" style="width:100%;" ${items.length===0 || items.some(i=>i.status==='pending') || !order(openTableId).paymentMethod ? 'disabled':''}>Tutup Meja</button>
+        `}
+      </div>
+    `;
+    app.appendChild(screen);
+
+    document.getElementById('backBtn').onclick = ()=>{
+      if(isNew){ newOrderActive=false; draftItems=[]; draftTableId=null; draftPayment='belum'; }
+      else { openTableId=null; }
+      render();
+    };
+    const searchInput = document.getElementById('orderSearchInput');
+    searchInput.oninput = ()=>{ orderSearch = searchInput.value; render(); setTimeout(()=>{ const si=document.getElementById('orderSearchInput'); if(si){ si.focus(); si.setSelectionRange(si.value.length, si.value.length); } },0); };
+    screen.querySelectorAll('[data-ocat]').forEach(c=>{ c.onclick=()=>{ orderCatFilter=c.dataset.ocat; render(); }; });
+    screen.querySelectorAll('[data-inc]').forEach(b=>{
+      b.onclick = ()=>{
+        const m = state.menu.find(x=>x.id===b.dataset.inc);
+        if(isNew){ applyIncrement(draftItems, m); render(); }
+        else { incrementMenuQtyExisting(openTableId, m); }
+      };
+    });
+    screen.querySelectorAll('[data-dec]').forEach(b=>{
+      b.onclick = ()=>{
+        const m = state.menu.find(x=>x.id===b.dataset.dec);
+        if(isNew){ applyDecrement(draftItems, m); render(); }
+        else { decrementMenuQtyExisting(openTableId, m); }
+      };
+    });
+    screen.querySelectorAll('[data-toggle]').forEach(b=>{ b.onclick=()=>{ toggleItemStatus(openTableId, b.dataset.toggle); }; });
+    screen.querySelectorAll('[data-rm]').forEach(b=>{
+      b.onclick = ()=>{
+        if(isNew){ draftItems = draftItems.filter(i=>i.id!==b.dataset.rm); render(); }
+        else { removeItem(openTableId, b.dataset.rm); }
+      };
+    });
+    if(isNew){
+      screen.querySelectorAll('[data-pick-table]').forEach(c=>{
+        c.onclick = ()=>{
+          const tid = c.dataset.pickTable;
+          if(tableStatus(tid)!=='empty') return;
+          draftTableId = tid; render();
+        };
+      });
+      screen.querySelectorAll('[data-paynew]').forEach(b=>{ b.onclick=()=>{ draftPayment=b.dataset.paynew; render(); }; });
+      const finishBtn = document.getElementById('finishNewBtn');
+      if(finishBtn) finishBtn.onclick = finalizeNewOrder;
+    } else {
+      screen.querySelectorAll('[data-payexist]').forEach(b=>{
+        b.onclick = ()=>{ const v = b.dataset.payexist; setPaymentMethod(openTableId, v==='null'?null:v); };
+      });
+      document.getElementById('finishExistBtn').onclick = ()=>{ openTableId=null; render(); showToast('Pesanan disimpan'); };
+      document.getElementById('cancelOrderBtn').onclick = ()=>{
+        const tid = openTableId;
+        delete state.orders[tid]; openTableId=null; render();
+        sb.from('pos_orders').delete().eq('table_id', tid).then(({error})=>{ if(error) reportError(error,'batalkan pesanan'); });
+      };
+      const closeBtn = document.getElementById('closeTableBtn');
+      if(closeBtn) closeBtn.onclick = ()=>{ closeTable(openTableId); };
+    }
+  }
+
+  function renderTableFormModal(){
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <button class="closeX" id="closeTF">✕</button>
+        <h2>Meja Baru</h2>
+        <div class="formrow"><label>Nama / nomor meja</label><input type="text" id="tfName" placeholder="contoh: C1"/></div>
+        <div class="modal-actions"><button class="btn btn-purple" id="tfSave">Simpan</button></div>
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeTF').onclick = ()=>{ tableFormOpen=null; render(); };
+    document.getElementById('tfSave').onclick = ()=>{
+      const name = document.getElementById('tfName').value.trim();
+      if(!name) return;
+      addTable(name, tableFormOpen.x, tableFormOpen.y);
+      tableFormOpen=null; render();
+    };
+  }
+
+  function renderMenuFormModal(){
+    const editing = menuFormOpen && menuFormOpen.id;
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <button class="closeX" id="closeMF">✕</button>
+        <h2>${editing?'Edit Menu':'Tambah Menu'}</h2>
+        <div class="formrow"><label>Nama item</label><input type="text" id="mfName" value="${editing?menuFormOpen.name:''}"/></div>
+        <div class="formrow"><label>Harga (Rp)</label><input type="number" id="mfPrice" value="${editing?menuFormOpen.price:''}"/></div>
+        <div class="formrow"><label>Kategori</label><input type="text" id="mfCat" value="${editing?menuFormOpen.cat:''}" placeholder="Minuman / Makanan / Snack"/></div>
+        <div class="modal-actions">
+          ${editing?'<button class="btn btn-line" id="mfDelete">Hapus</button>':''}
+          <button class="btn btn-purple" id="mfSave">Simpan</button>
+        </div>
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeMF').onclick = ()=>{ menuFormOpen=null; render(); };
+    document.getElementById('mfSave').onclick = ()=>{
+      const name = document.getElementById('mfName').value.trim();
+      const price = parseInt(document.getElementById('mfPrice').value)||0;
+      const cat = document.getElementById('mfCat').value.trim() || 'Lainnya';
+      if(!name) return;
+      if(editing) updateMenuItem(menuFormOpen.id, name, price, cat);
+      else addMenuItem(name, price, cat);
+      menuFormOpen=null; render();
+    };
+    if(editing){ document.getElementById('mfDelete').onclick = ()=>{ deleteMenuItem(menuFormOpen.id); menuFormOpen=null; render(); }; }
+  }
+
+  loadState();
+})();
+</script>
