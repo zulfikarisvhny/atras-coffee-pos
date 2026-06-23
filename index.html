@@ -320,7 +320,7 @@
     dbErrorMsg = 'Library Supabase gagal dimuat. Buka file ini di luar Claude (misal lewat Vercel) supaya bisa konek ke database.';
   }
 
-  let state = { tables: [], menu: [], orders: {} };
+  let state = { tables: [], menu: [], orders: {}, categories: [] };
 
   let view = 'map';
   let editMode = false;
@@ -330,12 +330,17 @@
   let newOrderActive = false;
   let draftItems = [];
   let draftTableId = null;
+  let referralMode = false;
+  let noteEditFor = null; // {scope:'draft'|'existing', tableId, itemId}
+  let categoryReorderMode = false;
   let orderSearch = '';
   let orderCatFilter = 'Semua';
   let menuCatFilter = 'Semua';
   let menuFormOpen = null;
   let tableFormOpen = null;
   let toastTimer = null;
+  const REFERRAL_CATS = ['Kopi Susu','Coffee Mocktails','Milk Based','Refreshments'];
+  const REFERRAL_PRICE = 10000;
 
   function showToast(msg){
     const t = document.getElementById('toastEl');
@@ -347,27 +352,40 @@
     console.error(label, err);
     showToast('Gagal sync ke database ('+label+')');
   }
+  function effectivePrice(m){
+    return (referralMode && REFERRAL_CATS.includes(m.cat)) ? REFERRAL_PRICE : m.price;
+  }
+  function orderedCategories(){
+    const fromDb = state.categories.map(c=>c.name);
+    const fromMenu = [...new Set(state.menu.map(m=>m.cat))];
+    const merged = [...fromDb];
+    fromMenu.forEach(c=>{ if(!merged.includes(c)) merged.push(c); });
+    return merged;
+  }
 
   // ---------- load from Supabase ----------
   async function loadState(){
     if(!sb){ render(); return; }
     try{
-      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}] = await Promise.all([
+      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}, {data:cats,error:e5}] = await Promise.all([
         sb.from('pos_tables').select('*'),
         sb.from('pos_menu').select('*'),
         sb.from('pos_orders').select('*'),
-        sb.from('pos_order_items').select('*')
+        sb.from('pos_order_items').select('*'),
+        sb.from('pos_categories').select('*').order('sort_order', {ascending:true})
       ]);
       if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
+      state.categories = (cats||[]).map(c=>({name:c.name, sortOrder:c.sort_order}));
       state.orders = {};
       (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
         if(!state.orders[it.table_id]) state.orders[it.table_id] = {items:[], openedAt:Date.now()};
         state.orders[it.table_id].items.push({
           id: it.id, menuId: it.menu_id, name: it.name, price: it.price, qty: it.qty,
-          status: it.status, addedAt: new Date(it.added_at).getTime(), paymentMethod: it.payment_method || null
+          status: it.status, addedAt: new Date(it.added_at).getTime(), paymentMethod: it.payment_method || null,
+          note: it.note || ''
         });
       });
       dbReady = true;
@@ -434,17 +452,19 @@
   }
   function displayQtyFor(items, menuId){ return items.filter(it=>it.menuId===menuId).reduce((s,it)=>s+it.qty,0); }
 
-  function applyIncrement(items, m){
+  function applyIncrement(items, m, price){
+    const useprice = price!=null ? price : m.price;
     let target=null;
-    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending' && !items[i].paymentMethod){ target=items[i]; break; } }
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].price===useprice && items[i].status==='pending' && !items[i].paymentMethod){ target=items[i]; break; } }
     if(target){ target.qty += 1; return {mode:'update', item:target}; }
-    const newItem = {id:'it'+Date.now()+Math.random().toString(36).slice(2,6), menuId:m.id, name:m.name, price:m.price, qty:1, status:'pending', addedAt:Date.now(), paymentMethod:null};
+    const newItem = {id:'it'+Date.now()+Math.random().toString(36).slice(2,6), menuId:m.id, name:m.name, price:useprice, qty:1, status:'pending', addedAt:Date.now(), paymentMethod:null, note:''};
     items.push(newItem);
     return {mode:'insert', item:newItem};
   }
-  function applyDecrement(items, m){
+  function applyDecrement(items, m, price){
+    const useprice = price!=null ? price : m.price;
     let idx=-1;
-    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].status==='pending' && !items[i].paymentMethod){ idx=i; break; } }
+    for(let i=items.length-1;i>=0;i--){ if(items[i].menuId===m.id && items[i].price===useprice && items[i].status==='pending' && !items[i].paymentMethod){ idx=i; break; } }
     if(idx===-1) return null;
     if(items[idx].qty>1){ items[idx].qty -=1; return {mode:'update', item:items[idx]}; }
     const removed = items[idx];
@@ -455,13 +475,13 @@
   // ---------- mutations (optimistic local update + supabase sync) ----------
   function incrementMenuQtyExisting(tableId, m){
     const o = ensureOrderLocal(tableId);
-    const res = applyIncrement(o.items, m);
+    const res = applyIncrement(o.items, m, effectivePrice(m));
     render();
     (async ()=>{
       try{
         await sb.from('pos_orders').upsert({table_id:tableId});
         if(res.mode==='insert'){
-          await sb.from('pos_order_items').insert({id:res.item.id, table_id:tableId, menu_id:res.item.menuId, name:res.item.name, price:res.item.price, qty:res.item.qty, status:res.item.status, added_at:new Date(res.item.addedAt).toISOString(), payment_method:null});
+          await sb.from('pos_order_items').insert({id:res.item.id, table_id:tableId, menu_id:res.item.menuId, name:res.item.name, price:res.item.price, qty:res.item.qty, status:res.item.status, added_at:new Date(res.item.addedAt).toISOString(), payment_method:null, note:res.item.note||null});
         } else {
           await sb.from('pos_order_items').update({qty:res.item.qty}).eq('id', res.item.id);
         }
@@ -470,7 +490,7 @@
   }
   function decrementMenuQtyExisting(tableId, m){
     const o = order(tableId); if(!o) return;
-    const res = applyDecrement(o.items, m);
+    const res = applyDecrement(o.items, m, effectivePrice(m));
     if(!res) return;
     const nowEmpty = o.items.length===0;
     render();
@@ -525,12 +545,12 @@
         const paidPortion = {
           id:'it'+Date.now()+Math.random().toString(36).slice(2,6),
           menuId:item.menuId, name:item.name, price:item.price, qty:qty,
-          status:item.status, addedAt:item.addedAt, paymentMethod:sp.method
+          status:item.status, addedAt:item.addedAt, paymentMethod:sp.method, note:item.note||''
         };
         items.push(paidPortion);
         if(sp.mode!=='draft'){
           dbOps.push(sb.from('pos_order_items').update({qty:item.qty}).eq('id', item.id));
-          dbOps.push(sb.from('pos_order_items').insert({id:paidPortion.id, table_id:sp.tableId, menu_id:paidPortion.menuId, name:paidPortion.name, price:paidPortion.price, qty:paidPortion.qty, status:paidPortion.status, added_at:new Date(paidPortion.addedAt).toISOString(), payment_method:sp.method}));
+          dbOps.push(sb.from('pos_order_items').insert({id:paidPortion.id, table_id:sp.tableId, menu_id:paidPortion.menuId, name:paidPortion.name, price:paidPortion.price, qty:paidPortion.qty, status:paidPortion.status, added_at:new Date(paidPortion.addedAt).toISOString(), payment_method:sp.method, note:paidPortion.note||null}));
         }
       }
     });
@@ -595,7 +615,7 @@
   }
 
   function startNewOrder(){
-    newOrderActive = true; draftItems = []; draftTableId = null;
+    newOrderActive = true; draftItems = []; draftTableId = null; referralMode = false;
     orderSearch=''; orderCatFilter='Semua';
     render();
   }
@@ -614,7 +634,7 @@
       try{
         await sb.from('pos_orders').upsert({table_id:tid});
         await sb.from('pos_order_items').insert(items.map(it=>({
-          id:it.id, table_id:tid, menu_id:it.menuId, name:it.name, price:it.price, qty:it.qty, status:it.status, added_at:new Date(it.addedAt).toISOString(), payment_method:it.paymentMethod
+          id:it.id, table_id:tid, menu_id:it.menuId, name:it.name, price:it.price, qty:it.qty, status:it.status, added_at:new Date(it.addedAt).toISOString(), payment_method:it.paymentMethod, note:it.note||null
         })));
         showToast('Pesanan untuk Meja '+tname+' berhasil dibuat');
       }catch(e){ reportError(e,'buat pesanan baru'); }
@@ -668,6 +688,7 @@
     if(menuFormOpen) renderMenuFormModal();
     if(confirmCloseTableId) renderConfirmCloseModal();
     if(splitPayOpen) renderSplitPayModal();
+    if(noteEditFor) renderNoteModal();
   }
 
   function renderMapView(el){
@@ -709,7 +730,7 @@
         box.onclick = ()=>{
           if(status==='empty'){ showToast('Meja kosong — mulai pesanan baru dari tombol "+ Pesanan Baru"'); return; }
           if(status==='done'){ confirmCloseTableId=t.id; render(); return; }
-          openTableId=t.id; render();
+          openTableId=t.id; referralMode=false; render();
         };
       }
       canvas.appendChild(box);
@@ -767,23 +788,60 @@
   }
 
   function renderMenuView(el){
-    const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
-    let html = `<div class="toolrow"><div class="hint">Kelola daftar menu & harga</div><button class="btn btn-purple" id="addMenuBtn">+ Tambah Menu</button></div>`;
-    html += `<div class="chiprow">` + cats.map(c=>`<div class="chip ${menuCatFilter===c?'active':''}" data-mcat="${c}">${c}</div>`).join('') + `</div>`;
+    const cats = orderedCategories();
+    let html = `<div class="toolrow"><div class="hint">Kelola daftar menu & harga</div><div class="right-tools">
+      <button class="btn btn-purple" id="addMenuBtn">+ Tambah Menu</button>
+      <button class="btn ${categoryReorderMode?'btn-purple':'btn-line'}" id="reorderCatBtn">${categoryReorderMode?'✓ Selesai Atur Urutan':'↔️ Atur Urutan Kategori'}</button>
+    </div></div>`;
+    if(categoryReorderMode){
+      html += `<div style="font-size:12px;color:var(--ink-soft);margin-bottom:8px;">Geser (drag) kartu kategori buat atur urutan tampil di menu & order screen.</div>`;
+      html += `<div class="chiprow" id="reorderChipRow" style="flex-wrap:wrap;">` + cats.map(c=>`<div class="chip" draggable="true" data-dragcat="${c}" style="cursor:grab;">⠿ ${c}</div>`).join('') + `</div>`;
+    } else {
+      html += `<div class="chiprow">` + ['Semua',...cats].map(c=>`<div class="chip ${menuCatFilter===c?'active':''}" data-mcat="${c}">${c}</div>`).join('') + `</div>`;
+    }
     const list = state.menu.filter(m=> menuCatFilter==='Semua' || m.cat===menuCatFilter);
-    html += list.map(m=>`
-      <div class="menurow">
-        <div><div class="nm">${CAT_ICON[m.cat]||'🍴'} ${m.name}</div><div class="cat">${m.cat}</div></div>
-        <div style="display:flex;align-items:center;">
-          <div class="pr">${fmtMoney(m.price)}</div>
-          <button class="btn btn-line" data-editmenu="${m.id}">Edit</button>
+    if(!categoryReorderMode){
+      html += list.map(m=>`
+        <div class="menurow">
+          <div><div class="nm">${CAT_ICON[m.cat]||'🍴'} ${m.name}</div><div class="cat">${m.cat}</div></div>
+          <div style="display:flex;align-items:center;">
+            <div class="pr">${fmtMoney(m.price)}</div>
+            <button class="btn btn-line" data-editmenu="${m.id}">Edit</button>
+          </div>
         </div>
-      </div>
-    `).join('');
+      `).join('');
+    }
     el.innerHTML = html;
     document.getElementById('addMenuBtn').onclick = ()=>{ menuFormOpen={}; render(); };
+    document.getElementById('reorderCatBtn').onclick = ()=>{ categoryReorderMode=!categoryReorderMode; render(); };
     el.querySelectorAll('[data-mcat]').forEach(c=>{ c.onclick=()=>{ menuCatFilter=c.dataset.mcat; render(); }; });
     el.querySelectorAll('[data-editmenu]').forEach(b=>{ b.onclick=()=>{ menuFormOpen = state.menu.find(m=>m.id===b.dataset.editmenu); render(); }; });
+    if(categoryReorderMode){
+      const row = document.getElementById('reorderChipRow');
+      let dragSrc = null;
+      row.querySelectorAll('[data-dragcat]').forEach(chip=>{
+        chip.addEventListener('dragstart', (ev)=>{ dragSrc = chip.dataset.dragcat; ev.dataTransfer.effectAllowed='move'; });
+        chip.addEventListener('dragover', (ev)=>{ ev.preventDefault(); });
+        chip.addEventListener('drop', (ev)=>{
+          ev.preventDefault();
+          const target = chip.dataset.dragcat;
+          if(!dragSrc || dragSrc===target) return;
+          const order = orderedCategories();
+          const from = order.indexOf(dragSrc), to = order.indexOf(target);
+          order.splice(from,1); order.splice(to,0,dragSrc);
+          commitCategoryOrder(order);
+        });
+      });
+    }
+  }
+  function commitCategoryOrder(orderArr){
+    state.categories = orderArr.map((name,i)=>({name, sortOrder:i}));
+    render();
+    (async ()=>{
+      try{
+        await Promise.all(orderArr.map((name,i)=> sb.from('pos_categories').upsert({name, sort_order:i})));
+      }catch(e){ reportError(e,'urutan kategori'); }
+    })();
   }
 
   function renderOrderScreen(mode){
@@ -793,7 +851,7 @@
     const items = isNew ? draftItems : ensureOrderLocal(openTableId).items;
     const breakdown = paymentBreakdown(items);
     const total = itemsTotal(items);
-    const cats = ['Semua', ...new Set(state.menu.map(m=>m.cat))];
+    const cats = ['Semua', ...orderedCategories()];
     const filtered = state.menu.filter(m=>
       (orderCatFilter==='Semua' || m.cat===orderCatFilter) &&
       m.name.toLowerCase().includes(orderSearch.toLowerCase())
@@ -809,16 +867,22 @@
           ${isNew ? '<span class="stepbadge">Pesanan Baru</span>' : ''}
         </div>
         <div class="searchbar">🔍<input id="orderSearchInput" placeholder="Cari menu..." value="${orderSearch}"/></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+          <button id="referralToggle" class="btn ${referralMode?'btn-purple':'btn-line'}">🎟️ Harga Teman ${referralMode?'AKTIF':''}</button>
+          <span style="font-size:11px;color:var(--ink-soft);">Flat Rp10.000 utk Kopi Susu / Mocktail / Milk Based / Refreshments</span>
+        </div>
         <div class="chiprow">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c}</div>`).join('')}</div>
         <div class="grid">
           ${filtered.map(m=>{
             const qty = displayQtyFor(items, m.id);
+            const price = effectivePrice(m);
+            const isReferralPrice = price !== m.price;
             return `
             <div class="fcard">
               <div class="icowrap">${CAT_ICON[m.cat]||'🍴'}</div>
-              <div class="availbadge av">Tersedia</div>
+              <div class="availbadge av">${isReferralPrice ? '🎟️ Harga Teman' : 'Tersedia'}</div>
               <div class="fnm">${m.name}</div>
-              <div class="fpr">${fmtMoney(m.price)}</div>
+              <div class="fpr">${isReferralPrice ? `<span style="text-decoration:line-through;color:var(--ink-soft);font-size:11px;font-weight:600;">${fmtMoney(m.price)}</span> ${fmtMoney(price)}` : fmtMoney(price)}</div>
               <div class="qtystep">
                 <button class="qbtn" data-dec="${m.id}">−</button>
                 <span class="qval">${qty}</span>
@@ -837,6 +901,8 @@
                 <div>
                   <div class="nm">${it.qty}x ${it.name}</div>
                   <div class="sub">${fmtMoney(it.price*it.qty)} · ${isNew ? (it.paymentMethod ? (it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : 'Belum bayar') : (it.status==='served'?'Diantar':timeAgo(it.addedAt))+(it.paymentMethod ? ' · '+(it.paymentMethod==='cash'?'💵 Cash':'📱 QRIS') : '')}</div>
+                  ${it.note ? `<div style="font-size:11px;color:var(--purple-dark);margin-top:2px;">📝 ${it.note}</div>` : ''}
+                  <span class="rm-x" data-note="${it.id}" style="color:var(--purple-dark);">${it.note?'✎ Ubah catatan':'+ Tambah catatan'}</span>
                 </div>
                 <div class="cart-item-right">
                   ${isNew ? '' : `<button class="status-pill ${it.status}" data-toggle="${it.id}">${it.status==='pending'?'Belum diantar':'✓ Diantar'}</button>`}
@@ -892,24 +958,28 @@
       else { openTableId=null; }
       render();
     };
+    document.getElementById('referralToggle').onclick = ()=>{ referralMode=!referralMode; render(); };
     const searchInput = document.getElementById('orderSearchInput');
     searchInput.oninput = ()=>{ orderSearch = searchInput.value; render(); setTimeout(()=>{ const si=document.getElementById('orderSearchInput'); if(si){ si.focus(); si.setSelectionRange(si.value.length, si.value.length); } },0); };
     screen.querySelectorAll('[data-ocat]').forEach(c=>{ c.onclick=()=>{ orderCatFilter=c.dataset.ocat; render(); }; });
     screen.querySelectorAll('[data-inc]').forEach(b=>{
       b.onclick = ()=>{
         const m = state.menu.find(x=>x.id===b.dataset.inc);
-        if(isNew){ applyIncrement(draftItems, m); render(); }
+        if(isNew){ applyIncrement(draftItems, m, effectivePrice(m)); render(); }
         else { incrementMenuQtyExisting(openTableId, m); }
       };
     });
     screen.querySelectorAll('[data-dec]').forEach(b=>{
       b.onclick = ()=>{
         const m = state.menu.find(x=>x.id===b.dataset.dec);
-        if(isNew){ applyDecrement(draftItems, m); render(); }
+        if(isNew){ applyDecrement(draftItems, m, effectivePrice(m)); render(); }
         else { decrementMenuQtyExisting(openTableId, m); }
       };
     });
     screen.querySelectorAll('[data-toggle]').forEach(b=>{ b.onclick=()=>{ toggleItemStatus(openTableId, b.dataset.toggle); }; });
+    screen.querySelectorAll('[data-note]').forEach(b=>{
+      b.onclick = ()=>{ noteEditFor = {scope: isNew?'draft':'existing', tableId: isNew?null:openTableId, itemId: b.dataset.note}; render(); };
+    });
     screen.querySelectorAll('[data-rm]').forEach(b=>{
       b.onclick = ()=>{
         if(isNew){ draftItems = draftItems.filter(i=>i.id!==b.dataset.rm); render(); }
@@ -959,7 +1029,7 @@
     app.appendChild(overlay);
     document.getElementById('closeCC').onclick = ()=>{ confirmCloseTableId=null; render(); };
     document.getElementById('ccClose').onclick = ()=>{ const tid=confirmCloseTableId; confirmCloseTableId=null; closeTable(tid); };
-    document.getElementById('ccDetail').onclick = ()=>{ openTableId=confirmCloseTableId; confirmCloseTableId=null; render(); };
+    document.getElementById('ccDetail').onclick = ()=>{ openTableId=confirmCloseTableId; confirmCloseTableId=null; referralMode=false; render(); };
   }
 
   function openSplitPay(mode, tableId){
@@ -1023,6 +1093,34 @@
     });
     document.getElementById('spConfirm').onclick = async ()=>{
       await processSplitPayment();
+    };
+  }
+
+  function escAttr(s){ return (s||'').replace(/"/g,'&quot;'); }
+  function renderNoteModal(){
+    const ctx = noteEditFor;
+    const items = ctx.scope==='draft' ? draftItems : (order(ctx.tableId) ? order(ctx.tableId).items : []);
+    const item = items.find(i=>i.id===ctx.itemId);
+    if(!item){ noteEditFor=null; return; }
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <button class="closeX" id="closeNote">✕</button>
+        <h2>Catatan: ${item.name}</h2>
+        <div class="formrow"><label>Misal: less sugar, telur setengah matang, pisahin saus</label><input type="text" id="noteInput" value="${escAttr(item.note)}" placeholder="Tulis catatan..."/></div>
+        <div class="modal-actions"><button class="btn btn-purple" id="noteSave">Simpan</button></div>
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeNote').onclick = ()=>{ noteEditFor=null; render(); };
+    document.getElementById('noteSave').onclick = ()=>{
+      const val = document.getElementById('noteInput').value.trim();
+      item.note = val;
+      const scope = ctx.scope, itemId = ctx.itemId;
+      noteEditFor = null;
+      render();
+      if(scope!=='draft'){
+        sb.from('pos_order_items').update({note: val || null}).eq('id', itemId).then(({error})=>{ if(error) reportError(error,'simpan catatan'); });
+      }
     };
   }
 
