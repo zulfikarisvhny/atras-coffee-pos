@@ -382,10 +382,19 @@
     });
     return sum;
   }
+  function liveServedPaidQty(){
+    let n = 0;
+    Object.values(state.orders).forEach(o=>{
+      o.items.forEach(it=>{ if(it.status==='served' && it.paymentMethod) n += it.qty; });
+    });
+    return n;
+  }
   function todaySummary(){
     const closedRevenue = state.todaySales.reduce((s,x)=>s+x.total,0);
+    const closedItems = state.todaySales.reduce((s,x)=> s + (x.items||[]).reduce((s2,it)=>s2+(it.qty||0),0), 0);
     const revenue = closedRevenue + liveRevenueFromActiveOrders();
-    return { revenue, orders: state.todaySales.length };
+    const itemsDone = closedItems + liveServedPaidQty();
+    return { revenue, items: itemsDone };
   }
 
   // ---------- load from Supabase ----------
@@ -399,13 +408,13 @@
         sb.from('pos_orders').select('*'),
         sb.from('pos_order_items').select('*'),
         sb.from('pos_categories').select('*').order('sort_order', {ascending:true}),
-        sb.from('pos_sales_log').select('total,closed_at').gte('closed_at', todayStart.toISOString())
+        sb.from('pos_sales_log').select('total,closed_at,items').gte('closed_at', todayStart.toISOString())
       ]);
       if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
       state.categories = (cats||[]).map(c=>({name:c.name, sortOrder:c.sort_order}));
-      state.todaySales = (salesToday||[]).map(s=>({total:s.total, closedAt:s.closed_at}));
+      state.todaySales = (salesToday||[]).map(s=>({total:s.total, closedAt:s.closed_at, items:s.items||[]}));
       state.orders = {};
       (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
@@ -602,7 +611,7 @@
     const closedAtIso = new Date().toISOString();
     delete state.orders[tableId];
     openTableId=null;
-    state.todaySales.push({total, closedAt: closedAtIso});
+    state.todaySales.push({total, closedAt: closedAtIso, items: snapshot});
     render();
     (async ()=>{
       try{
@@ -705,7 +714,8 @@
       </div>
       <div class="todaybar">
         <div class="tb-item"><span class="tb-ico">💰</span><div><div class="tb-label">Omzet Hari Ini</div><div class="tb-value">${fmtMoney(summary.revenue)}</div></div></div>
-        <div class="tb-item"><span class="tb-ico">🧾</span><div><div class="tb-label">Pesanan Selesai</div><div class="tb-value">${summary.orders}</div></div></div>
+        <div class="tb-item"><span class="tb-ico">🧾</span><div><div class="tb-label">Item Selesai</div><div class="tb-value">${summary.items}</div></div></div>
+        <div class="tb-item"><span class="tb-ico">🔒</span><div><div class="tb-label">Meja Ditutup</div><div class="tb-value">${state.todaySales.length}</div></div></div>
       </div>
       <div class="body" id="bodyArea"></div>
       <div class="toast" id="toastEl"></div>
