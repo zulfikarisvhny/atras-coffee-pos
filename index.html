@@ -485,7 +485,7 @@
     return groups;
   }
   function pendingCountTotal(){
-    return Object.values(state.orders).reduce((s,o)=>s+o.items.filter(i=>i.status==='pending').length,0);
+    return Object.values(state.orders).reduce((s,o)=>s+o.items.filter(i=>i.status==='pending').reduce((s2,i)=>s2+i.qty,0),0);
   }
   function displayQtyFor(items, menuId){ return items.filter(it=>it.menuId===menuId).reduce((s,it)=>s+it.qty,0); }
 
@@ -547,6 +547,31 @@
     it.status = it.status==='pending'?'served':'pending';
     render();
     sb.from('pos_order_items').update({status:it.status}).eq('id', itemId).then(({error})=>{ if(error) reportError(error,'update status'); });
+  }
+  function markUnitServed(tableId, itemId){
+    const o = order(tableId); if(!o) return;
+    const it = o.items.find(i=>i.id===itemId);
+    if(!it || it.status!=='pending') return;
+    if(it.qty<=1){
+      it.status = 'served';
+      render();
+      sb.from('pos_order_items').update({status:'served'}).eq('id', itemId).then(({error})=>{ if(error) reportError(error,'tandai diantar'); });
+      return;
+    }
+    it.qty -= 1;
+    const servedUnit = {
+      id:'it'+Date.now()+Math.random().toString(36).slice(2,6),
+      menuId:it.menuId, name:it.name, price:it.price, qty:1, status:'served',
+      addedAt:it.addedAt, paymentMethod:it.paymentMethod, note:it.note||''
+    };
+    o.items.push(servedUnit);
+    render();
+    (async ()=>{
+      try{
+        await sb.from('pos_order_items').update({qty:it.qty}).eq('id', itemId);
+        await sb.from('pos_order_items').insert({id:servedUnit.id, table_id:tableId, menu_id:servedUnit.menuId, name:servedUnit.name, price:servedUnit.price, qty:1, status:'served', added_at:new Date(servedUnit.addedAt).toISOString(), payment_method:servedUnit.paymentMethod, note:servedUnit.note||null});
+      }catch(e){ reportError(e,'tandai diantar'); }
+    })();
   }
   function removeItem(tableId, itemId){
     const o = order(tableId); o.items = o.items.filter(i=>i.id!==itemId);
@@ -764,7 +789,7 @@
       box.style.left = t.x+'%'; box.style.top = t.y+'%';
       const o = order(t.id);
       const itemCount = o ? o.items.length : 0;
-      const pendingN = o ? o.items.filter(i=>i.status==='pending').length : 0;
+      const pendingN = o ? o.items.filter(i=>i.status==='pending').reduce((s,i)=>s+i.qty,0) : 0;
       box.innerHTML = `<div class="topstrip" style="background:${tableColor(t.id)}"></div><div class="name">${t.name}</div>` +
         (itemCount>0 ? `<div class="meta">${pendingN>0?pendingN+' blm antar':tableMetaLabel(o.items)}</div>` : '');
       if(editMode){
@@ -809,27 +834,32 @@
     if(groups.length===0){ el.innerHTML = `<div class="empty-state">🎉 Tidak ada pesanan yang nunggu diantar.</div>`; return; }
     el.innerHTML = groups.map(g=>{
       const color = tableColor(g.tableId);
+      const units = [];
+      g.items.forEach(it=>{
+        for(let i=0;i<it.qty;i++){ units.push({lineId:it.id, name:it.name, addedAt:it.addedAt, note:it.note}); }
+      });
       return `
       <div class="pending-group">
         <div class="ghead" style="background:${color}">
           <span>MEJA ${g.tableName}</span>
-          <span>${g.items.length} item belum diantar</span>
+          <span>${units.length} item belum diantar</span>
         </div>
         <div class="gbody">
-          ${g.items.map(it=>`
+          ${units.map(u=>`
             <div class="pending-row">
               <div>
-                <div class="nm">${it.qty}x ${it.name}</div>
-                <div class="wait">${timeAgo(it.addedAt)}</div>
+                <div class="nm">1x ${u.name}</div>
+                <div class="wait">${timeAgo(u.addedAt)}</div>
+                ${u.note ? `<div style="font-size:11px;color:var(--purple-dark);">📝 ${u.note}</div>` : ''}
               </div>
-              <button class="btn btn-soft-green" data-served="${g.tableId}|${it.id}">✓ Sudah Diantar</button>
+              <button class="btn btn-soft-green" data-servedunit="${g.tableId}|${u.lineId}">✓ Sudah Diantar</button>
             </div>
           `).join('')}
         </div>
       </div>
     `;}).join('');
-    el.querySelectorAll('[data-served]').forEach(b=>{
-      b.onclick = ()=>{ const [tid,iid]=b.dataset.served.split('|'); toggleItemStatus(tid,iid); showToast('Ditandai sudah diantar'); };
+    el.querySelectorAll('[data-servedunit]').forEach(b=>{
+      b.onclick = ()=>{ const [tid,iid]=b.dataset.servedunit.split('|'); markUnitServed(tid,iid); showToast('1 item ditandai sudah diantar'); };
     });
   }
 
