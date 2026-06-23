@@ -88,6 +88,16 @@
 .profile .pr{font-size:10.5px;color:var(--ink-soft);}
 
 .body{flex:1; padding:18px 24px 22px; overflow-y:auto; position:relative;}
+.todaybar{
+  display:flex; gap:24px;
+  padding:12px 24px;
+  background:linear-gradient(135deg, var(--purple-soft), #fff);
+  border-bottom:1px solid var(--line);
+}
+.todaybar .tb-item{display:flex;align-items:center;gap:10px;}
+.todaybar .tb-ico{font-size:22px;}
+.todaybar .tb-label{font-size:11px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
+.todaybar .tb-value{font-size:18px;font-weight:800;color:var(--ink);}
 
 .toolrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;}
 .toolrow .hint{font-size:13px;color:var(--ink-soft);}
@@ -320,7 +330,7 @@
     dbErrorMsg = 'Library Supabase gagal dimuat. Buka file ini di luar Claude (misal lewat Vercel) supaya bisa konek ke database.';
   }
 
-  let state = { tables: [], menu: [], orders: {}, categories: [] };
+  let state = { tables: [], menu: [], orders: {}, categories: [], todaySales: [] };
 
   let view = 'map';
   let editMode = false;
@@ -338,6 +348,7 @@
   let menuCatFilter = 'Semua';
   let menuFormOpen = null;
   let tableFormOpen = null;
+  let moveTableFrom = null;
   let toastTimer = null;
   const REFERRAL_CATS = ['Kopi Susu','Coffee Mocktails','Milk Based','Refreshments'];
   const REFERRAL_PRICE = 10000;
@@ -362,22 +373,29 @@
     fromMenu.forEach(c=>{ if(!merged.includes(c)) merged.push(c); });
     return merged;
   }
+  function todaySummary(){
+    const revenue = state.todaySales.reduce((s,x)=>s+x.total,0);
+    return { revenue, orders: state.todaySales.length };
+  }
 
   // ---------- load from Supabase ----------
   async function loadState(){
     if(!sb){ render(); return; }
     try{
-      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}, {data:cats,error:e5}] = await Promise.all([
+      const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}, {data:cats,error:e5}, {data:salesToday,error:e6}] = await Promise.all([
         sb.from('pos_tables').select('*'),
         sb.from('pos_menu').select('*'),
         sb.from('pos_orders').select('*'),
         sb.from('pos_order_items').select('*'),
-        sb.from('pos_categories').select('*').order('sort_order', {ascending:true})
+        sb.from('pos_categories').select('*').order('sort_order', {ascending:true}),
+        sb.from('pos_sales_log').select('total,closed_at').gte('closed_at', todayStart.toISOString())
       ]);
       if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
       state.categories = (cats||[]).map(c=>({name:c.name, sortOrder:c.sort_order}));
+      state.todaySales = (salesToday||[]).map(s=>({total:s.total, closedAt:s.closed_at}));
       state.orders = {};
       (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
@@ -571,12 +589,14 @@
     const methodsUsed = [...new Set(o.items.map(it=>it.paymentMethod).filter(Boolean))];
     const paymentSummary = methodsUsed.length===0 ? null : methodsUsed.length===1 ? methodsUsed[0] : 'mixed';
     const openedAtIso = new Date(o.openedAt || Date.now()).toISOString();
+    const closedAtIso = new Date().toISOString();
     delete state.orders[tableId];
     openTableId=null;
+    state.todaySales.push({total, closedAt: closedAtIso});
     render();
     (async ()=>{
       try{
-        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:paymentSummary, opened_at:openedAtIso, closed_at:new Date().toISOString()});
+        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:paymentSummary, opened_at:openedAtIso, closed_at:closedAtIso});
         await sb.from('pos_orders').delete().eq('table_id', tableId);
         showToast('Meja ditutup & direset');
       }catch(e){ reportError(e,'tutup meja'); }
@@ -651,6 +671,7 @@
       return;
     }
     const pendingCount = pendingCountTotal();
+    const summary = todaySummary();
     const now = new Date();
     const dateStr = now.toLocaleDateString('id-ID', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
     const timeStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
@@ -669,8 +690,12 @@
         <div class="headerright">
           <div class="pillinfo">📅 ${dateStr}</div>
           <div class="pillinfo">🕐 ${timeStr}</div>
-          <div class="profile"><div class="av">👤</div><div><div class="pn">Barista</div><div class="pr">On Duty</div></div></div>
+          <div class="profile"><div class="av">👤</div><div><div class="pn">Pendy</div><div class="pr">On Duty</div></div></div>
         </div>
+      </div>
+      <div class="todaybar">
+        <div class="tb-item"><span class="tb-ico">💰</span><div><div class="tb-label">Omzet Hari Ini</div><div class="tb-value">${fmtMoney(summary.revenue)}</div></div></div>
+        <div class="tb-item"><span class="tb-ico">🧾</span><div><div class="tb-label">Pesanan Selesai</div><div class="tb-value">${summary.orders}</div></div></div>
       </div>
       <div class="body" id="bodyArea"></div>
       <div class="toast" id="toastEl"></div>
@@ -689,6 +714,7 @@
     if(confirmCloseTableId) renderConfirmCloseModal();
     if(splitPayOpen) renderSplitPayModal();
     if(noteEditFor) renderNoteModal();
+    if(moveTableFrom) renderMoveTableModal();
   }
 
   function renderMapView(el){
@@ -945,6 +971,7 @@
             ${breakdown.cash===0 && breakdown.qris===0 && breakdown.belum===0 ? '<div>Belum ada item</div>' : ''}
           </div>
           ${breakdown.belum>0 ? `<button class="btn btn-ghost" id="splitPayBtn" style="width:100%;margin-bottom:8px;">💳 Proses Pembayaran</button>` : ''}
+          <button class="btn btn-line" id="moveTableBtn" style="width:100%;margin-bottom:8px;">🔁 Pindah Meja</button>
           <button class="btn btn-ghost" id="finishExistBtn" style="width:100%;margin-bottom:8px;">✓ Selesai</button>
           <button class="btn btn-soft-red" id="cancelOrderBtn" style="width:100%;margin-bottom:8px;">Batalkan Pesanan</button>
           <button class="btn btn-purple" id="closeTableBtn" style="width:100%;" ${items.length===0 || items.some(i=>i.status==='pending') || breakdown.belum>0 ? 'disabled':''}>Tutup Meja</button>
@@ -1001,6 +1028,7 @@
     } else {
       const spBtn = document.getElementById('splitPayBtn');
       if(spBtn) spBtn.onclick = ()=>{ openSplitPay('existing', openTableId); };
+      document.getElementById('moveTableBtn').onclick = ()=>{ moveTableFrom = openTableId; render(); };
       document.getElementById('finishExistBtn').onclick = ()=>{ openTableId=null; render(); showToast('Pesanan disimpan'); };
       document.getElementById('cancelOrderBtn').onclick = ()=>{
         const tid = openTableId;
@@ -1122,6 +1150,48 @@
         sb.from('pos_order_items').update({note: val || null}).eq('id', itemId).then(({error})=>{ if(error) reportError(error,'simpan catatan'); });
       }
     };
+  }
+
+  async function moveTableOrder(oldTableId, newTableId){
+    const o = order(oldTableId); if(!o) return;
+    if(tableStatus(newTableId)!=='empty'){ showToast('Meja tujuan sudah terisi'); return; }
+    const fromName = tableById(oldTableId).name, toName = tableById(newTableId).name;
+    state.orders[newTableId] = o;
+    delete state.orders[oldTableId];
+    if(openTableId===oldTableId) openTableId = newTableId;
+    render();
+    try{
+      await sb.from('pos_orders').insert({table_id:newTableId, created_at:new Date(o.openedAt).toISOString()});
+      await sb.from('pos_order_items').update({table_id:newTableId}).eq('table_id', oldTableId);
+      await sb.from('pos_orders').delete().eq('table_id', oldTableId);
+      showToast('Pesanan dipindah dari Meja '+fromName+' ke Meja '+toName);
+    }catch(e){ reportError(e,'pindah meja'); }
+  }
+  function renderMoveTableModal(){
+    const fromT = tableById(moveTableFrom);
+    if(!fromT){ moveTableFrom=null; return; }
+    const emptyTables = state.tables.filter(tb=>tableStatus(tb.id)==='empty');
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal">
+        <button class="closeX" id="closeMT">✕</button>
+        <h2>Pindah dari Meja ${fromT.name}</h2>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:12px;">Pilih meja kosong tujuan. Semua item, status diantar, dan pembayaran ikut pindah.</div>
+        ${emptyTables.length===0 ? '<div class="empty-state" style="padding:20px 0;">Tidak ada meja kosong saat ini.</div>' : `
+        <div class="tablepick-grid">
+          ${emptyTables.map(tb=>`<div class="tablepick" data-movetarget="${tb.id}"><span class="swatch" style="background:${tableColor(tb.id)}"></span>${tb.name}</div>`).join('')}
+        </div>`}
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeMT').onclick = ()=>{ moveTableFrom=null; render(); };
+    overlay.querySelectorAll('[data-movetarget]').forEach(c=>{
+      c.onclick = ()=>{
+        const dest = c.dataset.movetarget;
+        const src = moveTableFrom;
+        moveTableFrom = null;
+        moveTableOrder(src, dest);
+      };
+    });
   }
 
   function renderTableFormModal(){
