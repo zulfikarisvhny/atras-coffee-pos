@@ -373,8 +373,18 @@
     fromMenu.forEach(c=>{ if(!merged.includes(c)) merged.push(c); });
     return merged;
   }
+  function liveRevenueFromActiveOrders(){
+    let sum = 0;
+    Object.values(state.orders).forEach(o=>{
+      o.items.forEach(it=>{
+        if(it.status==='served' && it.paymentMethod) sum += it.price*it.qty;
+      });
+    });
+    return sum;
+  }
   function todaySummary(){
-    const revenue = state.todaySales.reduce((s,x)=>s+x.total,0);
+    const closedRevenue = state.todaySales.reduce((s,x)=>s+x.total,0);
+    const revenue = closedRevenue + liveRevenueFromActiveOrders();
     return { revenue, orders: state.todaySales.length };
   }
 
