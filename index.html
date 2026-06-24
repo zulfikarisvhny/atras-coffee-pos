@@ -373,9 +373,14 @@
     fromMenu.forEach(c=>{ if(!merged.includes(c)) merged.push(c); });
     return merged;
   }
+  function todayStartMs(){
+    const d = new Date(); d.setHours(0,0,0,0); return d.getTime();
+  }
   function liveRevenueFromActiveOrders(){
+    const start = todayStartMs();
     let sum = 0;
     Object.values(state.orders).forEach(o=>{
+      if(o.openedAt < start) return; // dibuka hari sebelumnya, bukan omzet hari ini
       o.items.forEach(it=>{
         if(it.status==='served' && it.paymentMethod) sum += it.price*it.qty;
       });
@@ -383,8 +388,10 @@
     return sum;
   }
   function liveServedPaidQty(){
+    const start = todayStartMs();
     let n = 0;
     Object.values(state.orders).forEach(o=>{
+      if(o.openedAt < start) return;
       o.items.forEach(it=>{ if(it.status==='served' && it.paymentMethod) n += it.qty; });
     });
     return n;
@@ -408,7 +415,7 @@
         sb.from('pos_orders').select('*'),
         sb.from('pos_order_items').select('*'),
         sb.from('pos_categories').select('*').order('sort_order', {ascending:true}),
-        sb.from('pos_sales_log').select('total,closed_at,items').gte('closed_at', todayStart.toISOString())
+        sb.from('pos_sales_log').select('total,closed_at,items,opened_at').gte('opened_at', todayStart.toISOString())
       ]);
       if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
@@ -636,7 +643,9 @@
     const closedAtIso = new Date().toISOString();
     delete state.orders[tableId];
     openTableId=null;
-    state.todaySales.push({total, closedAt: closedAtIso, items: snapshot});
+    if((o.openedAt || Date.now()) >= todayStartMs()){
+      state.todaySales.push({total, closedAt: closedAtIso, items: snapshot});
+    }
     render();
     (async ()=>{
       try{
@@ -734,7 +743,7 @@
         <div class="headerright">
           <div class="pillinfo">📅 ${dateStr}</div>
           <div class="pillinfo">🕐 ${timeStr}</div>
-          <div class="profile"><div class="av">👤</div><div><div class="pn">Pendy</div><div class="pr">On Duty</div></div></div>
+          <div class="profile"><div class="av">👤</div><div><div class="pn">Barista</div><div class="pr">On Duty</div></div></div>
         </div>
       </div>
       <div class="todaybar">
