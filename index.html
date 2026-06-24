@@ -639,6 +639,8 @@
     const snapshot = o.items.map(it=>({name:it.name, qty:it.qty, price:it.price, status:it.status, paymentMethod:it.paymentMethod}));
     const methodsUsed = [...new Set(o.items.map(it=>it.paymentMethod).filter(Boolean))];
     const paymentSummary = methodsUsed.length===0 ? null : methodsUsed.length===1 ? methodsUsed[0] : 'mixed';
+    const cashTotal = o.items.filter(it=>it.paymentMethod==='cash').reduce((s,it)=>s+it.price*it.qty,0);
+    const qrisTotal = o.items.filter(it=>it.paymentMethod==='qris').reduce((s,it)=>s+it.price*it.qty,0);
     const openedAtIso = new Date(o.openedAt || Date.now()).toISOString();
     const closedAtIso = new Date().toISOString();
     delete state.orders[tableId];
@@ -649,7 +651,7 @@
     render();
     (async ()=>{
       try{
-        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:paymentSummary, opened_at:openedAtIso, closed_at:closedAtIso});
+        await sb.from('pos_sales_log').insert({table_id:tableId, table_name:tname, items:snapshot, total:total, payment_method:paymentSummary, cash_total:cashTotal, qris_total:qrisTotal, opened_at:openedAtIso, closed_at:closedAtIso});
         await sb.from('pos_orders').delete().eq('table_id', tableId);
         showToast('Meja ditutup & direset');
       }catch(e){ reportError(e,'tutup meja'); }
