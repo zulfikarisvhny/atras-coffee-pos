@@ -88,16 +88,70 @@
 .profile .pr{font-size:10.5px;color:var(--ink-soft);}
 
 .body{flex:1; padding:18px 24px 22px; overflow-y:auto; position:relative;}
-.todaybar{
-  display:flex; gap:24px;
-  padding:12px 24px;
-  background:linear-gradient(135deg, var(--purple-soft), #fff);
+.statsgrid{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:16px;
+  padding:20px 24px; background:var(--bg);
   border-bottom:1px solid var(--line);
 }
-.todaybar .tb-item{display:flex;align-items:center;gap:10px;}
-.todaybar .tb-ico{font-size:22px;}
-.todaybar .tb-label{font-size:11px;color:var(--ink-soft);font-weight:700;text-transform:uppercase;letter-spacing:.03em;}
-.todaybar .tb-value{font-size:18px;font-weight:800;color:var(--ink);}
+.statcard{
+  background:#fff; border:1px solid var(--line); border-radius:16px;
+  padding:18px 18px 14px;
+}
+.statcard .icobox{
+  width:42px; height:42px; border-radius:12px;
+  background:var(--ink); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:19px; margin-bottom:14px;
+}
+.statcard .sc-value{font-size:22px; font-weight:800; color:var(--ink); line-height:1.15;}
+.statcard .sc-label{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
+.statcard .sc-divider{border-top:1px solid var(--line); margin:14px 0 10px;}
+.statcard .sc-compare{display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--ink-soft); gap:8px;}
+.statcard .sc-badge{font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap;}
+.statcard .sc-badge.up{background:var(--green-soft); color:var(--green);}
+.statcard .sc-badge.down{background:var(--red-soft); color:var(--red);}
+.statcard .sc-badge.flat{background:var(--line); color:var(--ink-soft);}
+
+.overview-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start;}
+.panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; flex:1;}
+.panel h3{margin:0 0 14px; font-size:14px; font-weight:800; color:var(--ink);}
+.barchart{display:flex; align-items:flex-end; gap:6px; height:170px; padding-top:14px;}
+.bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
+.bargroup{display:flex; gap:3px; align-items:flex-end; height:140px;}
+.bar{width:13px; border-radius:6px 6px 2px 2px; transition:height .3s;}
+.bar.revenue{background:var(--purple-soft);}
+.bar.revenue.today{background:var(--purple);}
+.bar.txn{background:var(--green-soft);}
+.bar.txn.today{background:var(--green);}
+.bar-label{font-size:10.5px; color:var(--ink-soft); margin-top:8px; font-weight:600;}
+.chart-legend{display:flex; gap:16px; margin-bottom:6px; font-size:11px; color:var(--ink-soft);}
+.chart-legend .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px;}
+.toplist-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
+.toplist-row:last-child{border-bottom:none;}
+.toplist-rank{width:20px; height:20px; border-radius:50%; background:var(--purple-soft); color:var(--purple-dark); font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; margin-right:8px;}
+.recent-row{display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; gap:10px;}
+.recent-row:last-child{border-bottom:none;}
+.paybar{display:flex; height:14px; border-radius:8px; overflow:hidden; margin:6px 0 16px; background:var(--line);}
+.paybar .seg.cash{background:var(--green);}
+.paybar .seg.qris{background:var(--purple);}
+.pay-legend-row{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line);}
+.pay-legend-row:last-child{border-bottom:none;}
+.pay-legend-row .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px;}
+.pay-legend-row .pct{color:var(--ink-soft); font-weight:700; margin-left:6px; font-size:11.5px;}
+.piechart-outer{position:relative; width:160px; height:160px; flex-shrink:0;}
+.piechart-outer .pie{width:100%; height:100%; border-radius:50%;}
+.piechart-outer .hole{position:absolute; top:50%; left:50%; width:64%; height:64%; background:#fff; border-radius:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
+.piechart-outer .h-val{font-size:14px; font-weight:800; color:var(--ink); line-height:1.2;}
+.piechart-outer .h-lbl{font-size:10px; color:var(--ink-soft); margin-top:2px;}
+
+.orderlist-table{width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; border:1px solid var(--line);}
+.orderlist-table th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); padding:12px 16px; border-bottom:1px solid var(--line); background:#FAFAFD; white-space:nowrap;}
+.orderlist-table td{padding:12px 16px; font-size:13px; border-bottom:1px solid var(--line); color:var(--ink); white-space:nowrap;}
+.orderlist-table tr:last-child td{border-bottom:none;}
+.status-badge2{font-size:10.5px; font-weight:700; padding:5px 12px; border-radius:20px; display:inline-block;}
+.status-badge2.pending{background:#E5EBFF; color:#3D5AFE;}
+.status-badge2.belum_bayar{background:var(--gold-soft); color:var(--gold);}
+.status-badge2.lunas{background:var(--green-soft); color:var(--green);}
 
 .toolrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;}
 .toolrow .hint{font-size:13px;color:var(--ink-soft);}
@@ -310,6 +364,26 @@
   z-index:90;opacity:0;transition:opacity .25s; white-space:nowrap;
 }
 .toast.show{opacity:1;}
+
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
+.filter-presets{display:flex;gap:6px;}
+.filter-presets button{border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;background:var(--purple-soft);color:var(--purple-dark);transition:all .15s;}
+.filter-presets button.sel{background:var(--purple);color:#fff;}
+.filter-custom{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap;}
+.filter-custom input[type=date]{border:1px solid var(--line);border-radius:9px;padding:5px 9px;font-size:12px;color:var(--ink);background:#FAFAFD;}
+.filter-apply{border:none;border-radius:9px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--purple);color:#fff;}
+.tb-section-head{font-size:11px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 5px;}
+.tbrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px;}
+.tbrow:last-child{border-bottom:none;}
+.tbrank{width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:7px;}
+.tbrank.top{background:var(--green-soft);color:var(--green);}
+.tbrank.bot{background:var(--red-soft);color:var(--red);}
+.barchart-outer{overflow-x:auto;padding-bottom:4px;}
+.barchart-inner{display:flex;align-items:flex-end;gap:5px;height:160px;padding-top:12px;min-width:max-content;}
+.bar-col2{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;min-width:26px;}
+.orderlist-scroll-wrap{max-height:378px;overflow-y:auto;border-radius:14px;border:1px solid var(--line);}
+.orderlist-scroll-wrap .orderlist-table{border:none;border-radius:0;}
+.section-sep{height:1px;background:var(--line);margin:8px 0;}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -330,7 +404,12 @@
     dbErrorMsg = 'Library Supabase gagal dimuat. Buka file ini di luar Claude (misal lewat Vercel) supaya bisa konek ke database.';
   }
 
-  let state = { tables: [], menu: [], orders: {}, categories: [], todaySales: [] };
+  let state = { tables: [], menu: [], orders: {}, categories: [], todaySales: [], yesterdaySales: [], last10DaysSales: [], recentClosed: [], filteredSales: [] };
+
+  const _now = new Date();
+  let filterStart = new Date(_now.getFullYear(), _now.getMonth(), 1);
+  let filterEnd   = new Date(_now.getFullYear(), _now.getMonth() + 1, 0);
+  let filterPreset = 'month'; // 'today' | '7d' | 'month' | 'custom'
 
   let view = 'map';
   let editMode = false;
@@ -343,6 +422,7 @@
   let referralMode = false;
   let noteEditFor = null; // {scope:'draft'|'existing', tableId, itemId}
   let categoryReorderMode = false;
+  let orderListSortAsc = false;
   let orderSearch = '';
   let orderCatFilter = 'Semua';
   let menuCatFilter = 'Semua';
@@ -396,12 +476,242 @@
     });
     return n;
   }
+  function periodSummaryFromLogs(logs){
+    const revenue = logs.reduce((s,x)=>s+x.total,0);
+    const items = logs.reduce((s,x)=> s + (x.items||[]).reduce((s2,it)=>s2+(it.qty||0),0), 0);
+    const closedCount = logs.length;
+    const avg = closedCount ? Math.round(revenue/closedCount) : 0;
+    return { revenue, items, closedCount, avg };
+  }
   function todaySummary(){
-    const closedRevenue = state.todaySales.reduce((s,x)=>s+x.total,0);
-    const closedItems = state.todaySales.reduce((s,x)=> s + (x.items||[]).reduce((s2,it)=>s2+(it.qty||0),0), 0);
-    const revenue = closedRevenue + liveRevenueFromActiveOrders();
-    const itemsDone = closedItems + liveServedPaidQty();
-    return { revenue, items: itemsDone };
+    const closed = periodSummaryFromLogs(state.todaySales);
+    const revenue = closed.revenue + liveRevenueFromActiveOrders();
+    const items = closed.items + liveServedPaidQty();
+    const closedCount = closed.closedCount;
+    const avg = closedCount ? Math.round(revenue/closedCount) : revenue;
+    return { revenue, items, closedCount, avg };
+  }
+  function yesterdaySummary(){
+    return periodSummaryFromLogs(state.yesterdaySales);
+  }
+  function pctChange(today, yesterday){
+    if(yesterday===0) return today===0 ? {pct:0, dir:'flat'} : {pct:null, dir:'up'};
+    const pct = Math.round(((today-yesterday)/yesterday)*100);
+    return { pct, dir: pct>0?'up':pct<0?'down':'flat' };
+  }
+  function dailyStatsLast10Days(){
+    const start = todayStartMs();
+    const days = [];
+    for(let i=9;i>=0;i--){
+      const dayStart = start - i*24*3600*1000;
+      const dayEnd = dayStart + 24*3600*1000;
+      const dayRows = state.last10DaysSales.filter(r=>{ const t=new Date(r.openedAt).getTime(); return t>=dayStart && t<dayEnd; });
+      const closedRevenue = dayRows.reduce((s,r)=>s+r.total,0);
+      const isToday = i===0;
+      const total = closedRevenue + (isToday ? liveRevenueFromActiveOrders() : 0);
+      const count = dayRows.length;
+      days.push({ label: new Date(dayStart).toLocaleDateString('id-ID', {weekday:'short'}), total, count, isToday });
+    }
+    return days;
+  }
+  function paymentBreakdownToday(){
+    let cash = 0, qris = 0;
+    state.todaySales.forEach(s=>{
+      (s.items||[]).forEach(it=>{
+        if(it.paymentMethod==='cash') cash += it.price*it.qty;
+        else if(it.paymentMethod==='qris') qris += it.price*it.qty;
+      });
+    });
+    const start = todayStartMs();
+    Object.values(state.orders).forEach(o=>{
+      if(o.openedAt < start) return;
+      o.items.forEach(it=>{
+        if(it.status!=='served') return;
+        if(it.paymentMethod==='cash') cash += it.price*it.qty;
+        else if(it.paymentMethod==='qris') qris += it.price*it.qty;
+      });
+    });
+    return { cash, qris };
+  }
+  function topItemsToday(){
+    const counts = {};
+    const addItems = (items)=>{
+      items.forEach(it=>{
+        if(!(it.status==='served' && it.paymentMethod)) return;
+        counts[it.name] = (counts[it.name]||0) + it.qty;
+      });
+    };
+    state.todaySales.forEach(s=> addItems(s.items||[]));
+    const start = todayStartMs();
+    Object.values(state.orders).forEach(o=>{
+      if(o.openedAt < start) return;
+      addItems(o.items);
+    });
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  }
+
+  // ---------- filter helpers ----------
+  function toDateInput(d){
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+    return `${y}-${m}-${dd}`;
+  }
+  function parseDateInput(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+  function fmtK(n){ return n>=1000000 ? (n/1000000).toFixed(1).replace('.0','')+' jt' : Math.round(n/1000)+'K'; }
+  function isTodayInFilter(){
+    const t=new Date(); t.setHours(0,0,0,0);
+    const ms=t.getTime();
+    return filterStart.getTime()<=ms && filterEnd.getTime()>=ms;
+  }
+  function applyFilterPreset(preset){
+    filterPreset=preset;
+    const now=new Date();
+    if(preset==='today'){
+      filterStart=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      filterEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+    } else if(preset==='7d'){
+      filterEnd=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+      filterStart=new Date(filterEnd.getTime()-6*24*3600*1000);
+    } else if(preset==='month'){
+      filterStart=new Date(now.getFullYear(),now.getMonth(),1);
+      filterEnd=new Date(now.getFullYear(),now.getMonth()+1,0);
+    }
+  }
+  async function loadFilteredData(){
+    if(!sb) return;
+    try{
+      const start=new Date(filterStart); start.setHours(0,0,0,0);
+      const end=new Date(filterEnd); end.setHours(23,59,59,999);
+      const {data:sales,error}=await sb.from('pos_sales_log')
+        .select('table_name,total,closed_at,items,opened_at,payment_method')
+        .gte('opened_at', start.toISOString())
+        .lte('opened_at', end.toISOString())
+        .order('opened_at',{ascending:true});
+      if(error) throw error;
+      state.filteredSales=(sales||[]).map(s=>({
+        total:s.total, openedAt:s.opened_at, closedAt:s.closed_at,
+        tableName:s.table_name, items:s.items||[], paymentMethod:s.payment_method
+      }));
+    }catch(e){ reportError(e,'filter data'); }
+  }
+  function filteredSummary(){
+    const sales=state.filteredSales||[];
+    let rev=sales.reduce((s,x)=>s+x.total,0);
+    let items=sales.reduce((s,x)=>s+(x.items||[]).reduce((s2,it)=>(it.price||0)>0?s2+(it.qty||0):s2,0),0);
+    const count=sales.length;
+    if(isTodayInFilter()){
+      rev+=liveRevenueFromActiveOrders();
+      const start=todayStartMs();
+      Object.values(state.orders).forEach(o=>{
+        if(o.openedAt<start) return;
+        o.items.forEach(it=>{ if(it.status==='served'&&it.paymentMethod&&it.price>0) items+=it.qty; });
+      });
+    }
+    return {revenue:rev,items,closedCount:count,avg:count?Math.round(rev/count):rev};
+  }
+  function dailyStatsFiltered(){
+    const map={};
+    (state.filteredSales||[]).forEach(s=>{
+      const d=new Date(s.openedAt||s.closedAt);
+      const key=toDateInput(d);
+      if(!map[key]) map[key]={total:0,count:0,dateObj:new Date(d.getFullYear(),d.getMonth(),d.getDate())};
+      map[key].total+=s.total; map[key].count++;
+    });
+    if(isTodayInFilter()){
+      const tk=toDateInput(new Date());
+      if(!map[tk]) map[tk]={total:0,count:0,dateObj:new Date(),isToday:true};
+      map[tk].total+=liveRevenueFromActiveOrders(); map[tk].isToday=true;
+    }
+    return Object.entries(map).sort((a,b)=>a[0].localeCompare(b[0])).map(([key,d])=>({
+      key, isToday:d.isToday||false,
+      label:d.dateObj.toLocaleDateString('id-ID',{weekday:'short',day:'numeric',month:'short'}),
+      shortLabel:d.dateObj.toLocaleDateString('id-ID',{day:'numeric',month:'short'}),
+      total:d.total, count:d.count
+    }));
+  }
+  function topBottomDays(){
+    const days=dailyStatsFiltered().filter(d=>d.total>0);
+    const sorted=[...days].sort((a,b)=>b.total-a.total);
+    return {top:sorted[0]||null, bot:sorted[sorted.length-1]||null};
+  }
+  function last7DailyStats(){
+    const start=todayStartMs();
+    const days=[];
+    for(let i=6;i>=0;i--){
+      const dayStart=start-i*24*3600*1000;
+      const dayEnd=dayStart+24*3600*1000;
+      const rows=state.last10DaysSales.filter(r=>{const t=new Date(r.openedAt).getTime();return t>=dayStart&&t<dayEnd;});
+      const closed=rows.reduce((s,r)=>s+r.total,0);
+      const isToday=i===0;
+      const total=closed+(isToday?liveRevenueFromActiveOrders():0);
+      const date=new Date(dayStart);
+      days.push({total,isToday,label:date.toLocaleDateString('id-ID',{day:'numeric',month:'short'})});
+    }
+    return days;
+  }
+  function topItemsFiltered(){
+    const counts={};
+    (state.filteredSales||[]).forEach(s=>{
+      (s.items||[]).forEach(it=>{
+        if(!it.paymentMethod||(it.price||0)<=0) return;
+        counts[it.name]=(counts[it.name]||0)+(it.qty||0);
+      });
+    });
+    if(isTodayInFilter()){
+      const start=todayStartMs();
+      Object.values(state.orders).forEach(o=>{
+        if(o.openedAt<start) return;
+        o.items.forEach(it=>{ if(it.status==='served'&&it.paymentMethod&&it.price>0) counts[it.name]=(counts[it.name]||0)+it.qty; });
+      });
+    }
+    return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  }
+  function paymentBreakdownFiltered(){
+    let cash=0,qris=0;
+    (state.filteredSales||[]).forEach(s=>{
+      (s.items||[]).forEach(it=>{
+        if(it.paymentMethod==='cash') cash+=it.price*(it.qty||0);
+        else if(it.paymentMethod==='qris') qris+=it.price*(it.qty||0);
+      });
+    });
+    if(isTodayInFilter()){
+      const start=todayStartMs();
+      Object.values(state.orders).forEach(o=>{
+        if(o.openedAt<start) return;
+        o.items.forEach(it=>{
+          if(it.status!=='served') return;
+          if(it.paymentMethod==='cash') cash+=it.price*it.qty;
+          else if(it.paymentMethod==='qris') qris+=it.price*it.qty;
+        });
+      });
+    }
+    return {cash,qris};
+  }
+  function buildFilteredOrderRows(){
+    const rows=[];
+    const startMs=filterStart.getTime();
+    const endMs=filterEnd.getTime()+24*3600*1000;
+    (state.filteredSales||[]).forEach(s=>{
+      const t=new Date(s.openedAt||s.closedAt).getTime();
+      (s.items||[]).forEach(it=>{
+        if((it.price||0)<=0) return;
+        rows.push({time:t,table:s.tableName||'-',name:it.name,qty:it.qty||0,status:'lunas',subtotal:it.price*(it.qty||0)});
+      });
+    });
+    if(isTodayInFilter()){
+      Object.keys(state.orders).forEach(tid=>{
+        const o=state.orders[tid];
+        if(o.openedAt<startMs||o.openedAt>=endMs) return;
+        const tname=tableById(tid)?tableById(tid).name:'?';
+        o.items.forEach(it=>{
+          if(it.price<=0) return;
+          rows.push({time:it.addedAt,table:tname,name:it.name,qty:it.qty,
+            status:it.status==='pending'?'pending':(it.paymentMethod?'lunas':'belum_bayar'),
+            subtotal:it.price*it.qty});
+        });
+      });
+    }
+    rows.sort((a,b)=>orderListSortAsc?a.time-b.time:b.time-a.time);
+    return rows;
   }
 
   // ---------- load from Supabase ----------
@@ -409,19 +719,27 @@
     if(!sb){ render(); return; }
     try{
       const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}, {data:cats,error:e5}, {data:salesToday,error:e6}] = await Promise.all([
+      const yStart = new Date(todayStart.getTime() - 24*3600*1000);
+      const tenDayStart = new Date(todayStart.getTime() - 9*24*3600*1000);
+      const [{data:tables,error:e1}, {data:menu,error:e2}, {data:orders,error:e3}, {data:items,error:e4}, {data:cats,error:e5}, {data:salesToday,error:e6}, {data:salesYesterday,error:e7}, {data:sales10d,error:e8}, {data:recent,error:e9}] = await Promise.all([
         sb.from('pos_tables').select('*'),
         sb.from('pos_menu').select('*'),
         sb.from('pos_orders').select('*'),
         sb.from('pos_order_items').select('*'),
         sb.from('pos_categories').select('*').order('sort_order', {ascending:true}),
-        sb.from('pos_sales_log').select('total,closed_at,items,opened_at').gte('opened_at', todayStart.toISOString())
+        sb.from('pos_sales_log').select('table_name,total,closed_at,items,opened_at').gte('opened_at', todayStart.toISOString()),
+        sb.from('pos_sales_log').select('total,items,opened_at').gte('opened_at', yStart.toISOString()).lt('opened_at', todayStart.toISOString()),
+        sb.from('pos_sales_log').select('total,opened_at').gte('opened_at', tenDayStart.toISOString()),
+        sb.from('pos_sales_log').select('table_name,total,payment_method,closed_at').order('closed_at', {ascending:false}).limit(10)
       ]);
       if(e1||e2||e3||e4) throw (e1||e2||e3||e4);
       state.tables = (tables||[]).map(t=>({id:t.id, name:t.name, x:Number(t.x), y:Number(t.y)}));
       state.menu = (menu||[]).map(m=>({id:m.id, name:m.name, price:m.price, cat:m.category}));
       state.categories = (cats||[]).map(c=>({name:c.name, sortOrder:c.sort_order}));
-      state.todaySales = (salesToday||[]).map(s=>({total:s.total, closedAt:s.closed_at, items:s.items||[]}));
+      state.todaySales = (salesToday||[]).map(s=>({total:s.total, closedAt:s.closed_at, items:s.items||[], tableName:s.table_name}));
+      state.yesterdaySales = (salesYesterday||[]).map(s=>({total:s.total, items:s.items||[]}));
+      state.last10DaysSales = (sales10d||[]).map(s=>({total:s.total, openedAt:s.opened_at}));
+      state.recentClosed = (recent||[]).map(s=>({tableName:s.table_name, total:s.total, paymentMethod:s.payment_method, closedAt:s.closed_at}));
       state.orders = {};
       (orders||[]).forEach(o=>{ state.orders[o.table_id] = {items:[], openedAt: o.created_at ? new Date(o.created_at).getTime() : Date.now()}; });
       (items||[]).forEach(it=>{
@@ -433,6 +751,7 @@
         });
       });
       dbReady = true;
+      await loadFilteredData();
     }catch(e){
       dbErrorMsg = 'Gagal mengambil data dari Supabase. Cek koneksi internet atau jalankan file ini lewat hosting (Vercel), bukan dari dalam Claude.';
       console.error(e);
@@ -646,8 +965,11 @@
     delete state.orders[tableId];
     openTableId=null;
     if((o.openedAt || Date.now()) >= todayStartMs()){
-      state.todaySales.push({total, closedAt: closedAtIso, items: snapshot});
+      state.todaySales.push({total, closedAt: closedAtIso, items: snapshot, tableName: tname});
     }
+    state.last10DaysSales.push({total, openedAt: openedAtIso});
+    state.recentClosed.unshift({tableName:tname, total, paymentMethod:paymentSummary, closedAt:closedAtIso});
+    state.recentClosed = state.recentClosed.slice(0,10);
     render();
     (async ()=>{
       try{
@@ -726,7 +1048,6 @@
       return;
     }
     const pendingCount = pendingCountTotal();
-    const summary = todaySummary();
     const now = new Date();
     const dateStr = now.toLocaleDateString('id-ID', {weekday:'short', day:'2-digit', month:'short', year:'numeric'});
     const timeStr = now.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'});
@@ -738,6 +1059,7 @@
           <div><div class="name">Atras Coffee</div><div class="tag">Order & Serve Tracker</div></div>
         </div>
         <div class="navtabs">
+          <button data-nav="overview" class="${view==='overview'?'active':''}">📊 Overview</button>
           <button data-nav="map" class="${view==='map'?'active':''}">🗺️ Meja</button>
           <button data-nav="pending" class="${view==='pending'?'active':''}">⏳ Pending ${pendingCount>0?`<span class="badge">${pendingCount}</span>`:''}</button>
           <button data-nav="menu" class="${view==='menu'?'active':''}">📋 Menu</button>
@@ -748,17 +1070,13 @@
           <div class="profile"><div class="av">👤</div><div><div class="pn">Barista</div><div class="pr">On Duty</div></div></div>
         </div>
       </div>
-      <div class="todaybar">
-        <div class="tb-item"><span class="tb-ico">💰</span><div><div class="tb-label">Omzet Hari Ini</div><div class="tb-value">${fmtMoney(summary.revenue)}</div></div></div>
-        <div class="tb-item"><span class="tb-ico">🧾</span><div><div class="tb-label">Item Selesai</div><div class="tb-value">${summary.items}</div></div></div>
-        <div class="tb-item"><span class="tb-ico">🔒</span><div><div class="tb-label">Meja Ditutup</div><div class="tb-value">${state.todaySales.length}</div></div></div>
-      </div>
       <div class="body" id="bodyArea"></div>
       <div class="toast" id="toastEl"></div>
     `;
     document.querySelectorAll('[data-nav]').forEach(b=>{ b.onclick=()=>{ view=b.dataset.nav; render(); }; });
 
     const bodyArea = document.getElementById('bodyArea');
+    if(view==='overview') renderOverviewView(bodyArea);
     if(view==='map') renderMapView(bodyArea);
     if(view==='pending') renderPendingView(bodyArea);
     if(view==='menu') renderMenuView(bodyArea);
@@ -773,6 +1091,187 @@
     if(moveTableFrom) renderMoveTableModal();
   }
 
+  function renderOverviewView(el){
+    // --- filter label ---
+    const filterLabel = filterPreset==='today' ? 'Hari Ini'
+      : filterPreset==='7d' ? '7 Hari Terakhir'
+      : filterPreset==='month' ? filterStart.toLocaleDateString('id-ID',{month:'long',year:'numeric'})
+      : toDateInput(filterStart)+' s/d '+toDateInput(filterEnd);
+
+    // 1. Filter bar
+    const filterBarHtml = `
+      <div class="filter-bar">
+        <span style="font-weight:800;color:var(--ink);white-space:nowrap;">📅 Filter:</span>
+        <div class="filter-presets">
+          <button data-preset="today" class="${filterPreset==='today'?'sel':''}">Hari Ini</button>
+          <button data-preset="7d" class="${filterPreset==='7d'?'sel':''}">7 Hari</button>
+          <button data-preset="month" class="${filterPreset==='month'?'sel':''}">Bulan Ini</button>
+        </div>
+        <div class="filter-custom">
+          <span style="white-space:nowrap;font-size:11.5px;">Custom:</span>
+          <input type="date" id="fsInput" value="${toDateInput(filterStart)}"/>
+          <span>—</span>
+          <input type="date" id="feInput" value="${toDateInput(filterEnd)}"/>
+          <button class="filter-apply" id="filterApplyBtn">Terapkan</button>
+        </div>
+      </div>`;
+
+    // 2. 4 Stat cards
+    const summary = filteredSummary();
+    const statsHtml = [
+      {icon:'🧾', value:summary.items,              label:'Item Terjual'},
+      {icon:'🔒', value:summary.closedCount,         label:'Transaksi Selesai'},
+      {icon:'💰', value:fmtMoney(summary.revenue),   label:'Total Pendapatan'},
+      {icon:'📊', value:fmtMoney(summary.avg),       label:'Rata-rata / Transaksi'},
+    ].map(c=>`
+      <div class="statcard">
+        <div class="icobox">${c.icon}</div>
+        <div class="sc-value">${c.value}</div>
+        <div class="sc-label">${c.label}</div>
+        <div class="sc-divider"></div>
+        <div class="sc-compare"><span style="font-size:11px;color:var(--ink-soft);">${filterLabel}</span></div>
+      </div>`).join('');
+
+    // 3a. Bar chart — ikut filter, fallback 7 hari terakhir kalau "Hari Ini"
+    const chartDays = filterPreset==='today'
+      ? last7DailyStats()
+      : dailyStatsFiltered().map(d=>({...d, label:d.shortLabel||d.label}));
+    const maxRev = Math.max(...chartDays.map(d=>d.total), 1);
+    const chartTitle = filterPreset==='today' ? 'Pendapatan Harian (7 Hari Terakhir)' : 'Pendapatan Harian';
+    const chartHtml = `
+      <div class="panel" style="flex:1.35;min-width:0;">
+        <h3>${chartTitle}</h3>
+        <div class="barchart-outer">
+          <div class="barchart-inner" style="align-items:flex-end;gap:10px;padding-top:24px;">
+            ${chartDays.length===0
+              ? '<div style="font-size:12px;color:var(--ink-soft);padding:40px 0;">Belum ada data.</div>'
+              : chartDays.map(d=>`
+                  <div class="bar-col2" style="min-width:32px;flex:1;" title="${d.label}: ${fmtMoney(d.total)}">
+                    <div style="display:flex;align-items:flex-end;height:240px;width:100%;">
+                      <div class="bar revenue ${d.isToday?'today':''}"
+                        style="height:${Math.max(d.total>0?5:1,(d.total/maxRev)*100)}%;width:100%;border-radius:8px 8px 3px 3px;position:relative;">
+                        ${d.total>0?`<span style="position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:9px;font-weight:700;color:var(--ink-soft);white-space:nowrap;">${fmtK(d.total)}</span>`:''}
+                      </div>
+                    </div>
+                    <div class="bar-label" style="font-size:9px;margin-top:6px;text-align:center;">${d.label}</div>
+                  </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+
+    // 3b. Top & Bottom Pemasukan — 2 card
+    const {top, bot} = topBottomDays();
+    const dayCard = (d, colorVar, bgVar, title) => `
+      <div style="background:${bgVar};border-radius:13px;padding:14px 16px;flex:1;min-width:0;">
+        <div style="font-size:10.5px;font-weight:800;color:${colorVar};text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${title||''}</div>
+        ${d
+          ? `<div style="font-weight:800;font-size:14px;color:var(--ink);margin-bottom:4px;">${d.label||''}</div>
+             <div style="font-size:20px;font-weight:800;color:${colorVar};">${fmtMoney(d.total||0)}</div>`
+          : '<div style="font-size:12px;color:var(--ink-soft);">Belum ada data</div>'}
+      </div>`;
+    const topBotHtml = `
+      <div class="panel" style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;">
+        ${dayCard(top,'var(--green)','var(--green-soft)','Top Pemasukan')}
+        ${dayCard(bot,'var(--red)','var(--red-soft)','Bottom Pemasukan')}
+      </div>`;
+
+    // 4a. Item terlaris
+    const top5 = topItemsFiltered();
+    const topItemsHtml = `
+      <div class="panel" style="display:flex;flex-direction:column;">
+        <h3>Item Terlaris</h3>
+        ${top5.length===0
+          ? '<div style="font-size:12.5px;color:var(--ink-soft);">Belum ada data.</div>'
+          : top5.map((t,i)=>`
+              <div class="toplist-row">
+                <div style="display:flex;align-items:center;"><span class="toplist-rank">${i+1}</span>${t[0]}</div>
+                <b>${t[1]}x</b>
+              </div>`).join('')}
+      </div>`;
+
+    // 4b. Payment breakdown
+    const pb = paymentBreakdownFiltered();
+    const pbTotal = pb.cash+pb.qris;
+    const cashPct = pbTotal ? Math.round(pb.cash/pbTotal*100) : 0;
+    const qrisPct = pbTotal ? 100-cashPct : 0;
+    const payHtml = `
+      <div class="panel" style="display:flex;flex-direction:column;">
+        <h3>Cash vs QRIS</h3>
+        ${pbTotal===0
+          ? '<div style="font-size:12.5px;color:var(--ink-soft);">Belum ada pembayaran.</div>'
+          : `<div style="display:flex;align-items:center;gap:24px;flex:1;padding-top:6px;">
+              <div class="piechart-outer">
+                <div class="pie" style="background:conic-gradient(var(--green) 0% ${cashPct}%, var(--purple) ${cashPct}% 100%);"></div>
+                <div class="hole"><div class="h-val">${fmtMoney(pbTotal)}</div><div class="h-lbl">Total</div></div>
+              </div>
+              <div style="flex:1;">
+                <div class="pay-legend-row"><span><span class="dot" style="background:var(--green);"></span>Cash</span><span>${fmtMoney(pb.cash)}<span class="pct">${cashPct}%</span></span></div>
+                <div class="pay-legend-row"><span><span class="dot" style="background:var(--purple);"></span>QRIS</span><span>${fmtMoney(pb.qris)}<span class="pct">${qrisPct}%</span></span></div>
+              </div>
+            </div>`}
+      </div>`;
+
+    // 5. Order list (scrollable, semua baris tapi max-height ~10 rows)
+    const allRows = buildFilteredOrderRows();
+    const statusLabel = {pending:'Belum Diantar', belum_bayar:'Belum Bayar', lunas:'Lunas'};
+    const orderListHtml = `
+      <div class="panel" style="margin-top:18px;">
+        <div class="toolrow" style="margin-bottom:14px;">
+          <h3 style="margin:0;">Order List <span style="font-size:12px;font-weight:600;color:var(--ink-soft);">(${allRows.length} item)</span></h3>
+          <button class="btn btn-line" id="sortOrderListBtn">⇅ ${orderListSortAsc?'Terlama':'Terbaru'}</button>
+        </div>
+        ${allRows.length===0
+          ? '<div style="font-size:12.5px;color:var(--ink-soft);">Belum ada pesanan di periode ini.</div>'
+          : `<div class="orderlist-scroll-wrap">
+              <table class="orderlist-table">
+                <thead>
+                  <tr><th>Tanggal</th><th>Jam</th><th>Meja</th><th>Item</th><th>Qty</th><th>Status</th><th>Subtotal</th></tr>
+                </thead>
+                <tbody>
+                  ${allRows.map(r=>`
+                    <tr>
+                      <td>${new Date(r.time).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</td>
+                      <td>${new Date(r.time).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
+                      <td>${r.table}</td>
+                      <td>${r.name}</td>
+                      <td>${r.qty}</td>
+                      <td><span class="status-badge2 ${r.status}">${statusLabel[r.status]}</span></td>
+                      <td>${fmtMoney(r.subtotal)}</td>
+                    </tr>`).join('')}
+                </tbody>
+              </table>
+            </div>`}
+      </div>`;
+
+    el.innerHTML = `
+      ${filterBarHtml}
+      <div class="statsgrid" style="padding:0 0 18px;border-bottom:none;background:none;">${statsHtml}</div>
+      <div style="display:flex;gap:18px;align-items:stretch;margin-bottom:18px;">${chartHtml}${topBotHtml}</div>
+      <div class="overview-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0;align-items:stretch;">
+        <div style="display:flex;flex-direction:column;">${topItemsHtml}</div>
+        <div style="display:flex;flex-direction:column;">${payHtml}</div>
+      </div>
+      ${orderListHtml}
+    `;
+
+    document.getElementById('sortOrderListBtn').onclick = ()=>{ orderListSortAsc=!orderListSortAsc; render(); };
+    el.querySelectorAll('[data-preset]').forEach(b=>{
+      b.onclick = async ()=>{
+        applyFilterPreset(b.dataset.preset);
+        await loadFilteredData();
+        render();
+      };
+    });
+    document.getElementById('filterApplyBtn').onclick = async ()=>{
+      const sv=document.getElementById('fsInput').value;
+      const ev=document.getElementById('feInput').value;
+      if(!sv||!ev) return;
+      filterStart=parseDateInput(sv); filterEnd=parseDateInput(ev);
+      filterPreset='custom';
+      await loadFilteredData();
+      render();
+    };
+  }
   function renderMapView(el){
     el.innerHTML = `
       <div class="toolrow">
