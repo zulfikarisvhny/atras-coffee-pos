@@ -1457,7 +1457,7 @@
           <button id="referralToggle" class="btn ${referralMode?'btn-purple':'btn-line'}">🎟️ Harga Teman ${referralMode?'AKTIF':''}</button>
           <span style="font-size:11px;color:var(--ink-soft);">Flat Rp10.000 utk Kopi Susu / Mocktail / Milk Based / Refreshments</span>
         </div>
-        <div class="chiprow">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c}</div>`).join('')}</div>
+        <div class="chiprow" style="flex-wrap:wrap;overflow-x:visible;position:static;">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c}</div>`).join('')}</div>
         <div class="grid">
           ${filtered.map(m=>{
             const qty = displayQtyFor(items, m.id);
