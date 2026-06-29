@@ -447,6 +447,21 @@
   transition:background .15s;
 }
 .ol-export:hover{background:var(--purple-dark);}
+
+/* User switcher */
+.user-option{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 14px;border-radius:12px;border:1.5px solid var(--line);
+  cursor:pointer;transition:border-color .15s,background .15s;
+}
+.user-option:hover{border-color:var(--purple);background:var(--purple-soft);}
+.user-option.sel{border-color:var(--purple);background:var(--purple-soft);}
+.user-option .uav{
+  width:42px;height:42px;border-radius:50%;overflow:hidden;flex-shrink:0;
+  background:var(--purple-soft);display:flex;align-items:center;justify-content:center;font-size:20px;
+}
+.user-option .uav img{width:100%;height:100%;object-fit:cover;display:block;}
+.user-check{margin-left:auto;color:var(--purple);font-size:16px;font-weight:600;}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -490,6 +505,9 @@
   let orderCatFilter = 'Semua';
   let ovCatFilter = 'Semua';
   let ovSearch = '';
+  let activeUserName = 'Pendi';
+  let activeUserPhoto = 'Pendi Photos.png';
+  let userSwitcherOpen = false;
   let menuCatFilter = 'Semua';
   let menuFormOpen = null;
   let tableFormOpen = null;
@@ -1185,9 +1203,13 @@
           <button data-nav="menu" class="${view==='menu'?'active':''}">Menu</button>
         </div>
         <div class="headerright">
-          <div class="profile">
-            <div class="av"><img src="Pendi Photos.png" alt="Pendi"></div>
-            <div><div class="pn">Pendi</div><div class="pr">On Duty</div></div>
+          <div class="profile" id="profileBtn" style="cursor:pointer;" title="Ganti pengguna">
+            <div class="av">
+              ${activeUserPhoto
+                ? `<img src="${activeUserPhoto}" alt="${activeUserName}">`
+                : `<span style="font-size:18px;">👤</span>`}
+            </div>
+            <div><div class="pn">${activeUserName}</div><div class="pr">On Duty</div></div>
           </div>
         </div>
       </div>
@@ -1195,6 +1217,8 @@
       <div class="toast" id="toastEl"></div>
     `;
     document.querySelectorAll('[data-nav]').forEach(b=>{ b.onclick=()=>{ view=b.dataset.nav; render(); }; });
+    const profileBtn = document.getElementById('profileBtn');
+    if(profileBtn) profileBtn.onclick=()=>{ userSwitcherOpen=true; render(); };
 
     const bodyArea = document.getElementById('bodyArea');
     if(view==='overview') renderOverviewView(bodyArea);
@@ -1210,6 +1234,7 @@
     if(splitPayOpen) renderSplitPayModal();
     if(noteEditFor) renderNoteModal();
     if(moveTableFrom) renderMoveTableModal();
+    if(userSwitcherOpen) renderUserSwitcherModal();
   }
 
   function renderOverviewView(el){
@@ -1932,6 +1957,42 @@
       showToast('Pesanan dipindah dari Meja '+fromName+' ke Meja '+toName);
     }catch(e){ reportError(e,'pindah meja'); }
   }
+  function renderUserSwitcherModal(){
+    const users = [
+      {name:'Pendi',   photo:'Pendi Photos.png'},
+      {name:'Barista', photo:''},
+    ];
+    const overlay = document.createElement('div'); overlay.className='overlay';
+    overlay.innerHTML = `
+      <div class="modal" style="width:300px;">
+        <button class="closeX" id="closeUS">✕</button>
+        <h2 style="margin:0 0 16px;">Pilih Pengguna</h2>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+          ${users.map(u=>`
+            <div class="user-option ${activeUserName===u.name?'sel':''}" data-uname="${u.name}" data-uphoto="${u.photo}">
+              <div class="uav">
+                ${u.photo ? `<img src="${u.photo}" alt="${u.name}">` : '👤'}
+              </div>
+              <div>
+                <div style="font-size:14px;font-weight:600;color:var(--ink);">${u.name}</div>
+                <div style="font-size:11.5px;color:var(--ink-soft);">On Duty</div>
+              </div>
+              ${activeUserName===u.name ? '<span class="user-check">✓</span>' : ''}
+            </div>`).join('')}
+        </div>
+      </div>`;
+    app.appendChild(overlay);
+    document.getElementById('closeUS').onclick=()=>{ userSwitcherOpen=false; render(); };
+    overlay.querySelectorAll('[data-uname]').forEach(opt=>{
+      opt.onclick=()=>{
+        activeUserName=opt.dataset.uname;
+        activeUserPhoto=opt.dataset.uphoto;
+        userSwitcherOpen=false;
+        render();
+      };
+    });
+  }
+
   function renderMoveTableModal(){
     const fromT = tableById(moveTableFrom);
     if(!fromT){ moveTableFrom=null; return; }
