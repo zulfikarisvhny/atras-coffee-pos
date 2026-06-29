@@ -5,30 +5,33 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Atras Coffee — POS</title>
   <link rel="icon" type="image/jpeg" href="atras_logo.jpg"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 <div id="app"></div>
 <style>
 :root{
-  --bg:#F3F1FB;
+  --bg:#EFF2E7;
   --card:#FFFFFF;
-  --purple:#7C5CFC;
-  --purple-dark:#5B3FE0;
-  --purple-soft:#EEE9FE;
-  --ink:#23263A;
-  --ink-soft:#8D90A6;
-  --line:#ECEAF7;
-  --green:#28B978;
-  --green-soft:#E3F7EC;
-  --red:#E14F4B;
-  --red-soft:#FCE7E6;
-  --gold:#E0A526;
-  --gold-soft:#FBF0D9;
-  --shadow:0 4px 16px rgba(76,60,160,0.07);
+  --purple:#2D5C22;
+  --purple-dark:#1D400F;
+  --purple-soft:#E2EFD0;
+  --ink:#18251A;
+  --ink-soft:#677A5E;
+  --line:#D2E3BE;
+  --green:#3BAA4A;
+  --green-soft:#E0F4E3;
+  --red:#D94040;
+  --red-soft:#FDEAEA;
+  --gold:#BF8800;
+  --gold-soft:#F8EDD0;
+  --shadow:0 4px 16px rgba(20,50,10,0.09);
 }
 *{box-sizing:border-box;}
 #app{
-  font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  font-family: 'Poppins', -apple-system, "Segoe UI", Roboto, sans-serif;
   background:var(--bg);
   color:var(--ink);
   width:100%;
@@ -43,58 +46,47 @@
   position:relative;
 }
 .header{
-  background:var(--card);
-  border-bottom:1px solid var(--line);
+  background:var(--bg);
+  border-bottom:none;
   display:flex;
   align-items:center;
   justify-content:space-between;
-  padding:14px 24px;
+  padding:16px 32px;
   gap:20px;
 }
-.brand{display:flex;align-items:center;gap:10px;}
-.brand .logo{
-  width:38px;height:38px;border-radius:11px;
-  background:linear-gradient(135deg,var(--purple),var(--purple-dark));
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;
-}
-.brand .name{font-weight:800;font-size:15px;line-height:1.1;}
-.brand .tag{font-size:11px;color:var(--ink-soft);}
-.navtabs{display:flex;gap:6px;}
+.brand{display:flex;align-items:center;}
+.brand-logo{height:44px;width:auto;display:block;}
+.navtabs{display:flex;gap:4px;align-items:center;}
 .navtabs button{
   border:none;background:none;
-  padding:8px 14px;
+  padding:9px 22px;
   font-size:13.5px;
-  font-weight:700;
-  color:var(--ink-soft);
-  border-radius:9px;
-  display:flex;align-items:center;gap:6px;
+  font-weight:500;
+  color:var(--ink);
+  border-radius:40px;
+  display:flex;align-items:center;gap:7px;
   position:relative;
+  cursor:pointer;
+  font-family:inherit;
+  transition:background .15s,color .15s;
 }
-.navtabs button.active{ color:var(--purple-dark); background:var(--purple-soft); }
+.navtabs button:hover:not(.active){background:rgba(45,92,34,0.07);}
+.navtabs button.active{color:#fff;background:rgba(45,92,34,0.65);}
 .navtabs .badge{
-  background:var(--red);color:#fff;font-size:10px;font-weight:700;
-  border-radius:8px;padding:1px 6px;
+  background:var(--red);color:#fff;font-size:10px;font-weight:500;
+  border-radius:20px;padding:1px 7px;
 }
-.headerright{display:flex;align-items:center;gap:10px;}
-.pillinfo{
-  border:1px solid var(--line);
-  border-radius:10px;
-  padding:7px 12px;
-  font-size:12px;
-  font-weight:600;
-  color:var(--ink-soft);
-  display:flex;align-items:center;gap:6px;
-  white-space:nowrap;
-}
-.profile{display:flex;align-items:center;gap:8px;}
+.headerright{display:flex;align-items:center;gap:12px;}
+.profile{display:flex;align-items:center;gap:10px;}
 .profile .av{
-  width:34px;height:34px;border-radius:50%;
-  background:var(--purple-soft);
-  display:flex;align-items:center;justify-content:center;font-size:16px;
+  width:42px;height:42px;border-radius:50%;
+  overflow:hidden;
+  border:2px solid var(--line);
+  flex-shrink:0;
 }
-.profile .pn{font-size:12.5px;font-weight:700;line-height:1.2;}
-.profile .pr{font-size:10.5px;color:var(--ink-soft);}
+.profile .av img{width:100%;height:100%;object-fit:cover;display:block;}
+.profile .pn{font-size:13px;font-weight:500;line-height:1.2;color:var(--ink);}
+.profile .pr{font-size:11px;color:var(--ink-soft);font-weight:500;}
 
 .body{flex:1; padding:18px 24px 22px; overflow-y:auto; position:relative;}
 .statsgrid{
@@ -107,29 +99,31 @@
   padding:18px 18px 14px;
 }
 .statcard .icobox{
-  width:42px; height:42px; border-radius:12px;
-  background:var(--ink); color:#fff;
+  width:52px; height:52px;
+  margin-bottom:14px;
   display:flex; align-items:center; justify-content:center;
-  font-size:19px; margin-bottom:14px;
 }
-.statcard .sc-value{font-size:22px; font-weight:800; color:var(--ink); line-height:1.15;}
+.statcard .icobox img{
+  width:100%; height:100%; object-fit:contain; display:block;
+}
+.statcard .sc-value{font-size:22px; font-weight:600; color:var(--ink); line-height:1.15;}
 .statcard .sc-label{font-size:12.5px; color:var(--ink-soft); margin-top:2px;}
 .statcard .sc-divider{border-top:1px solid var(--line); margin:14px 0 10px;}
 .statcard .sc-compare{display:flex; justify-content:space-between; align-items:center; font-size:11px; color:var(--ink-soft); gap:8px;}
-.statcard .sc-badge{font-size:11px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap;}
+.statcard .sc-badge{font-size:11px; font-weight:500; padding:3px 9px; border-radius:20px; white-space:nowrap;}
 .statcard .sc-badge.up{background:var(--green-soft); color:var(--green);}
 .statcard .sc-badge.down{background:var(--red-soft); color:var(--red);}
 .statcard .sc-badge.flat{background:var(--line); color:var(--ink-soft);}
 
 .overview-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:18px; align-items:start;}
 .panel{background:#fff; border:1px solid var(--line); border-radius:16px; padding:18px; flex:1;}
-.panel h3{margin:0 0 14px; font-size:14px; font-weight:800; color:var(--ink);}
+.panel h3{margin:0 0 14px; font-size:14px; font-weight:600; color:var(--ink);}
 .barchart{display:flex; align-items:flex-end; gap:6px; height:170px; padding-top:14px;}
 .bar-col{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%;}
 .bargroup{display:flex; gap:3px; align-items:flex-end; height:140px;}
 .bar{width:13px; border-radius:6px 6px 2px 2px; transition:height .3s;}
-.bar.revenue{background:var(--purple-soft);}
-.bar.revenue.today{background:var(--purple);}
+.bar.revenue{background:#C8E46A;}
+.bar.revenue.today{background:#8ABF1A;}
 .bar.txn{background:var(--green-soft);}
 .bar.txn.today{background:var(--green);}
 .bar-label{font-size:10.5px; color:var(--ink-soft); margin-top:8px; font-weight:600;}
@@ -137,7 +131,7 @@
 .chart-legend .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px;}
 .toplist-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--line); font-size:13px;}
 .toplist-row:last-child{border-bottom:none;}
-.toplist-rank{width:20px; height:20px; border-radius:50%; background:var(--purple-soft); color:var(--purple-dark); font-size:11px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; margin-right:8px;}
+.toplist-rank{width:20px; height:20px; border-radius:50%; background:var(--purple-soft); color:var(--purple-dark); font-size:11px; font-weight:600; display:inline-flex; align-items:center; justify-content:center; margin-right:8px;}
 .recent-row{display:flex; justify-content:space-between; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--line); font-size:12.5px; gap:10px;}
 .recent-row:last-child{border-bottom:none;}
 .paybar{display:flex; height:14px; border-radius:8px; overflow:hidden; margin:6px 0 16px; background:var(--line);}
@@ -146,18 +140,18 @@
 .pay-legend-row{display:flex; justify-content:space-between; align-items:center; font-size:13px; padding:8px 0; border-bottom:1px solid var(--line);}
 .pay-legend-row:last-child{border-bottom:none;}
 .pay-legend-row .dot{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:7px;}
-.pay-legend-row .pct{color:var(--ink-soft); font-weight:700; margin-left:6px; font-size:11.5px;}
+.pay-legend-row .pct{color:var(--ink-soft); font-weight:500; margin-left:6px; font-size:11.5px;}
 .piechart-outer{position:relative; width:160px; height:160px; flex-shrink:0;}
 .piechart-outer .pie{width:100%; height:100%; border-radius:50%;}
 .piechart-outer .hole{position:absolute; top:50%; left:50%; width:64%; height:64%; background:#fff; border-radius:50%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;}
-.piechart-outer .h-val{font-size:14px; font-weight:800; color:var(--ink); line-height:1.2;}
+.piechart-outer .h-val{font-size:14px; font-weight:600; color:var(--ink); line-height:1.2;}
 .piechart-outer .h-lbl{font-size:10px; color:var(--ink-soft); margin-top:2px;}
 
 .orderlist-table{width:100%; border-collapse:collapse; background:#fff; border-radius:14px; overflow:hidden; border:1px solid var(--line);}
 .orderlist-table th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:.03em; color:var(--ink-soft); padding:12px 16px; border-bottom:1px solid var(--line); background:#FAFAFD; white-space:nowrap;}
 .orderlist-table td{padding:12px 16px; font-size:13px; border-bottom:1px solid var(--line); color:var(--ink); white-space:nowrap;}
 .orderlist-table tr:last-child td{border-bottom:none;}
-.status-badge2{font-size:10.5px; font-weight:700; padding:5px 12px; border-radius:20px; display:inline-block;}
+.status-badge2{font-size:10.5px; font-weight:500; padding:5px 12px; border-radius:20px; display:inline-block;}
 .status-badge2.pending{background:#E5EBFF; color:#3D5AFE;}
 .status-badge2.belum_bayar{background:var(--gold-soft); color:var(--gold);}
 .status-badge2.lunas{background:var(--green-soft); color:var(--green);}
@@ -167,7 +161,7 @@
 .toolrow .right-tools{display:flex;gap:8px;}
 .btn{
   border:none;border-radius:11px;padding:9px 16px;
-  font-size:13px;font-weight:700;cursor:pointer;
+  font-size:13px;font-weight:500;cursor:pointer;
 }
 .btn-purple{background:var(--purple); color:#fff;}
 .btn-purple:disabled{background:#D8D3F6;cursor:not-allowed;}
@@ -204,8 +198,8 @@
 .table-box .topstrip{
   position:absolute; top:-2px; left:8px; right:8px; height:5px; border-radius:0 0 4px 4px;
 }
-.table-box .name{font-weight:800;font-size:15px;}
-.table-box .meta{font-size:10px;margin-top:3px;font-weight:700;text-align:center;padding:0 4px;}
+.table-box .name{font-weight:600;font-size:15px;}
+.table-box .meta{font-size:10px;margin-top:3px;font-weight:500;text-align:center;padding:0 4px;}
 .table-box.pending{ background:var(--red); border-color:var(--red); color:#fff; }
 .table-box.unpaid{ background:var(--gold); border-color:var(--gold); color:#fff; }
 .table-box.done{ background:var(--green); border-color:var(--green); color:#fff; }
@@ -223,7 +217,7 @@
   flex:0 0 auto;
   background:#fff;border:1px solid var(--line);
   border-radius:13px;padding:10px 16px;
-  font-size:12.5px;font-weight:700;color:var(--ink-soft);
+  font-size:12.5px;font-weight:500;color:var(--ink-soft);
   text-align:center;min-width:88px;cursor:pointer;
 }
 .chip.active{background:var(--purple-soft); border-color:var(--purple); color:var(--purple-dark);}
@@ -249,21 +243,21 @@
   background:var(--purple-soft);
   display:flex;align-items:center;justify-content:center;font-size:26px;
 }
-.fcard .fnm{font-weight:800;font-size:13px;line-height:1.25;min-height:34px;}
-.fcard .fpr{font-weight:800;font-size:13.5px;}
+.fcard .fnm{font-weight:600;font-size:13px;line-height:1.25;min-height:34px;}
+.fcard .fpr{font-weight:600;font-size:13.5px;}
 .fcard .availbadge{
   align-self:flex-start;
-  font-size:10px;font-weight:700;
+  font-size:10px;font-weight:500;
   border-radius:8px;padding:2px 8px;
 }
 .fcard .availbadge.av{background:var(--green-soft);color:var(--green);}
 .fcard .qtystep{display:flex;align-items:center;justify-content:space-between;margin-top:2px;}
 .qbtn{
   width:28px;height:28px;border-radius:9px;border:none;
-  background:var(--purple-soft); color:var(--purple-dark); font-weight:800;font-size:15px;
+  background:var(--purple-soft); color:var(--purple-dark); font-weight:600;font-size:15px;
 }
 .qbtn.add{background:var(--purple);color:#fff;}
-.qval{font-weight:800;font-size:14px;}
+.qval{font-weight:600;font-size:14px;}
 
 .orderscreen{
   position:absolute; inset:0; background:var(--bg);
@@ -280,34 +274,34 @@
 .backrow{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
 .backbtn{
   border:1px solid var(--line); background:#fff; border-radius:10px;
-  padding:7px 12px; font-size:13px;font-weight:700;color:var(--ink-soft);
+  padding:7px 12px; font-size:13px;font-weight:500;color:var(--ink-soft);
 }
 .stepbadge{
-  font-size:10.5px;font-weight:800;color:var(--purple-dark);background:var(--purple-soft);
+  font-size:10.5px;font-weight:600;color:var(--purple-dark);background:var(--purple-soft);
   border-radius:8px;padding:3px 9px;
 }
 .cart-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;}
 .cart-head h3{margin:0;font-size:16px;}
-.cart-list{margin:8px 0; max-height:220px; overflow-y:auto;}
+.cart-list{margin:8px 0; max-height:220px; overflow-y:auto; flex-shrink:0;}
 .cart-item{
   display:flex;justify-content:space-between;align-items:flex-start;
   padding:9px 0;border-bottom:1px solid var(--line);
 }
-.cart-item .nm{font-weight:700;font-size:13px;}
+.cart-item .nm{font-weight:500;font-size:13px;}
 .cart-item .sub{font-size:10.5px;color:var(--ink-soft);margin-top:2px;}
 .status-pill{
-  font-size:10.5px;font-weight:700;padding:5px 10px;border-radius:20px;border:none;white-space:nowrap;
+  font-size:10.5px;font-weight:500;padding:5px 10px;border-radius:20px;border:none;white-space:nowrap;
 }
 .status-pill.pending{background:var(--red-soft); color:var(--red);}
 .status-pill.served{background:var(--green-soft); color:var(--green);}
 .cart-item-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;}
 .rm-x{color:var(--ink-soft);font-size:11px;cursor:pointer;}
 .cart-empty{color:var(--ink-soft);font-size:12.5px;text-align:center;padding:20px 0;}
-.total-row{display:flex;justify-content:space-between;font-weight:800;font-size:15px;padding:9px 0 8px;border-top:1px solid var(--line);}
-.section-label{font-size:11.5px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin:10px 0 7px;}
+.total-row{display:flex;justify-content:space-between;font-weight:600;font-size:15px;padding:9px 0 8px;border-top:1px solid var(--line);}
+.section-label{font-size:11.5px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.03em;margin:10px 0 7px;}
 .pay-row{display:flex;gap:7px;margin-bottom:8px;}
 .pay-row button{
-  flex:1;padding:9px 4px;border-radius:10px;font-size:12px;font-weight:700;
+  flex:1;padding:9px 4px;border-radius:10px;font-size:12px;font-weight:500;
   border:1px solid var(--line);background:#fff;color:var(--ink-soft);
   display:flex;flex-direction:column;align-items:center;gap:2px;
 }
@@ -319,12 +313,12 @@
 .tablepick{
   position:relative;
   border-radius:10px; border:2px solid var(--line); background:#fff;
-  padding:9px 4px; text-align:center; font-size:12px; font-weight:800; color:var(--ink-soft);
+  padding:9px 4px; text-align:center; font-size:12px; font-weight:600; color:var(--ink-soft);
 }
 .tablepick .swatch{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:4px;}
 .tablepick.sel{border-color:var(--purple); background:var(--purple-soft); color:var(--purple-dark);}
 .tablepick.occupied{opacity:.4; cursor:not-allowed;}
-.tablepick .occ-tag{display:block;font-size:9px;font-weight:700;color:var(--red);margin-top:1px;}
+.tablepick .occ-tag{display:block;font-size:9px;font-weight:500;color:var(--red);margin-top:1px;}
 
 .pending-group{
   border-radius:14px; border:1px solid var(--line); background:#fff;
@@ -332,7 +326,7 @@
 }
 .pending-group .ghead{
   display:flex;align-items:center;justify-content:space-between;
-  padding:11px 16px; color:#fff; font-weight:800; font-size:13.5px;
+  padding:11px 16px; color:#fff; font-weight:600; font-size:13.5px;
 }
 .pending-group .gbody{padding:4px 16px 6px;}
 .pending-row{
@@ -340,7 +334,7 @@
   padding:10px 0; border-bottom:1px solid var(--line);
 }
 .pending-row:last-child{border-bottom:none;}
-.pending-row .nm{font-weight:700;font-size:13.5px;}
+.pending-row .nm{font-weight:500;font-size:13.5px;}
 .pending-row .wait{font-size:11px;color:var(--ink-soft);margin-top:1px;}
 .empty-state{text-align:center;color:var(--ink-soft);font-size:13.5px;padding:60px 10px;}
 
@@ -348,15 +342,15 @@
   background:#fff;border:1px solid var(--line);border-radius:13px;
   padding:12px 16px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;
 }
-.menurow .nm{font-weight:800;font-size:14px;}
+.menurow .nm{font-weight:600;font-size:14px;}
 .menurow .cat{font-size:11.5px;color:var(--ink-soft);margin-top:2px;}
-.menurow .pr{font-weight:700;font-size:13px;color:var(--ink-soft);margin-right:10px;}
+.menurow .pr{font-weight:500;font-size:13px;color:var(--ink-soft);margin-right:10px;}
 
 .overlay{position:fixed;inset:0;background:rgba(35,38,58,0.45);display:flex;align-items:center;justify-content:center;z-index:60;}
 .modal{background:#fff;border-radius:16px;padding:20px 22px;width:340px;}
 .modal h2{margin:0 0 12px;font-size:16px;}
 .formrow{margin-bottom:11px;}
-.formrow label{font-size:11.5px;font-weight:700;color:var(--ink-soft);display:block;margin-bottom:4px;}
+.formrow label{font-size:11.5px;font-weight:500;color:var(--ink-soft);display:block;margin-bottom:4px;}
 .formrow input{
   width:100%;padding:9px 10px;border-radius:9px;border:1px solid var(--line);
   font-size:13.5px;background:#FAFAFD;color:var(--ink);
@@ -376,15 +370,15 @@
 
 .filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:16px;font-size:12.5px;font-weight:600;color:var(--ink-soft);}
 .filter-presets{display:flex;gap:6px;}
-.filter-presets button{border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:700;cursor:pointer;background:var(--purple-soft);color:var(--purple-dark);transition:all .15s;}
+.filter-presets button{border:none;border-radius:9px;padding:6px 12px;font-size:12px;font-weight:500;cursor:pointer;background:var(--purple-soft);color:var(--purple-dark);transition:all .15s;}
 .filter-presets button.sel{background:var(--purple);color:#fff;}
 .filter-custom{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap;}
 .filter-custom input[type=date]{border:1px solid var(--line);border-radius:9px;padding:5px 9px;font-size:12px;color:var(--ink);background:#FAFAFD;}
-.filter-apply{border:none;border-radius:9px;padding:6px 14px;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--purple);color:#fff;}
-.tb-section-head{font-size:11px;font-weight:800;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 5px;}
+.filter-apply{border:none;border-radius:9px;padding:6px 14px;font-size:12.5px;font-weight:500;cursor:pointer;background:var(--purple);color:#fff;}
+.tb-section-head{font-size:11px;font-weight:600;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;margin:10px 0 5px;}
 .tbrow{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line);font-size:12px;}
 .tbrow:last-child{border-bottom:none;}
-.tbrank{width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:7px;}
+.tbrank{width:19px;height:19px;border-radius:50%;font-size:10px;font-weight:600;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:7px;}
 .tbrank.top{background:var(--green-soft);color:var(--green);}
 .tbrank.bot{background:var(--red-soft);color:var(--red);}
 .barchart-outer{overflow-x:auto;padding-bottom:4px;}
@@ -393,6 +387,66 @@
 .orderlist-scroll-wrap{max-height:378px;overflow-y:auto;border-radius:14px;border:1px solid var(--line);}
 .orderlist-scroll-wrap .orderlist-table{border:none;border-radius:0;}
 .section-sep{height:1px;background:var(--line);margin:8px 0;}
+
+/* Period dropdown */
+.period-dropdown{position:relative;display:inline-block;z-index:20;}
+.pd-trigger{
+  display:flex;align-items:center;justify-content:space-between;gap:48px;
+  background:#fff;border-radius:14px;padding:13px 18px;
+  cursor:pointer;font-weight:600;font-size:14px;color:var(--ink);
+  border:1px solid var(--line);min-width:220px;
+  box-shadow:var(--shadow);user-select:none;
+}
+.pd-trigger svg{transition:transform .2s;flex-shrink:0;}
+.pd-trigger.open svg{transform:rotate(180deg);}
+.pd-menu{
+  position:absolute;top:calc(100% + 8px);left:0;
+  background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:6px;box-shadow:0 8px 28px rgba(20,50,10,0.13);min-width:240px;
+  display:none;
+}
+.pd-menu.open{display:block;}
+.pd-option{
+  padding:10px 14px;border-radius:10px;font-size:13.5px;font-weight:600;
+  color:var(--ink);cursor:pointer;font-family:inherit;
+}
+.pd-option:hover{background:var(--bg);}
+.pd-option.active{background:var(--purple-soft);color:var(--purple-dark);}
+.custom-range{
+  display:flex;align-items:center;gap:8px;
+  background:#fff;border:1px solid var(--line);border-radius:14px;
+  padding:10px 16px;box-shadow:var(--shadow);
+}
+.custom-range input[type=date]{
+  border:none;outline:none;font-size:13px;color:var(--ink);
+  background:transparent;font-family:inherit;cursor:pointer;
+}
+.cr-sep{color:var(--ink-soft);font-size:13px;flex-shrink:0;}
+.cr-apply{
+  border:none;border-radius:9px;padding:6px 14px;
+  font-size:13px;font-weight:500;cursor:pointer;
+  background:var(--purple);color:#fff;
+  font-family:inherit;white-space:nowrap;margin-left:4px;
+}
+
+/* Order list toolbar */
+.ol-toolbar{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap;}
+.ol-tabs{display:flex;gap:4px;overflow-x:auto;flex:1;min-width:0;}
+.ol-tabs::-webkit-scrollbar{display:none;}
+.ol-tabs button{
+  border:none;background:none;white-space:nowrap;cursor:pointer;
+  padding:8px 14px;font-size:12.5px;font-weight:500;color:var(--ink-soft);
+  border-bottom:2px solid transparent;font-family:inherit;
+  transition:color .15s,border-color .15s;
+}
+.ol-tabs button:hover{color:var(--ink);}
+.ol-tabs button.sel{color:var(--ink);font-weight:600;border-bottom-color:var(--purple);}
+.ol-export{
+  border:none;border-radius:10px;padding:9px 16px;font-size:12.5px;font-weight:500;
+  background:var(--purple);color:#fff;cursor:pointer;white-space:nowrap;font-family:inherit;
+  transition:background .15s;
+}
+.ol-export:hover{background:var(--purple-dark);}
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
@@ -400,7 +454,7 @@
 (function(){
   const app = document.getElementById('app');
   const CAT_ICON = {'Noodles':'🍜','Snack':'🍘','Add On':'➕','Classic Coffee':'☕','Kopi Susu':'🧋','Coffee Mocktails':'🍹','Milk Based':'🥛','Refreshments':'🍋'};
-  const PALETTE = ['#7C5CFC','#FF7A59','#16A3B8','#E0A526','#3D8BFD','#E14F4B','#28B978','#B33DC6','#0EA5E9','#D6336C','#2F9E44','#5B3FE0'];
+  const PALETTE = ['#2D5C22','#D4782A','#1A7A6A','#BF8800','#4A8C35','#C05030','#3B8A50','#7A5820','#2A5A8A','#8A3A5A','#5C8A25','#3A6B1A'];
 
   const SUPABASE_URL = 'https://vchqvbnkhssauuxyxaoa.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_LHs-GJfbb8vmNebtWtI2tA_Ln_biOqR';
@@ -434,6 +488,8 @@
   let orderListSortAsc = false;
   let orderSearch = '';
   let orderCatFilter = 'Semua';
+  let ovCatFilter = 'Semua';
+  let ovSearch = '';
   let menuCatFilter = 'Semua';
   let menuFormOpen = null;
   let tableFormOpen = null;
@@ -1047,11 +1103,67 @@
     })();
   }
 
+  function topMenuItems(n){
+    const counts={};
+    // Hitung dari filtered sales (closed orders)
+    (state.filteredSales||[]).forEach(s=>{
+      (s.items||[]).forEach(it=>{
+        if((it.price||0)>0 && it.paymentMethod)
+          counts[it.name]=(counts[it.name]||0)+(it.qty||0);
+      });
+    });
+    // Hitung dari today's closed sales
+    (state.todaySales||[]).forEach(s=>{
+      (s.items||[]).forEach(it=>{
+        if((it.price||0)>0 && it.paymentMethod)
+          counts[it.name]=(counts[it.name]||0)+(it.qty||0);
+      });
+    });
+    // Hitung dari active orders hari ini
+    const start=todayStartMs();
+    Object.values(state.orders).forEach(o=>{
+      if((o.openedAt||0)>=start)
+        (o.items||[]).forEach(it=>{ if(it.price>0) counts[it.name]=(counts[it.name]||0)+it.qty; });
+    });
+    const ranked=state.menu
+      .map(m=>({...m,_count:counts[m.name]||0}))
+      .sort((a,b)=>b._count-a._count||a.name.localeCompare(b.name));
+    // Ambil top N; kalau kurang dari N pakai sisa menu sebagai pelengkap
+    const topN=ranked.slice(0,n);
+    if(topN.length<n){
+      const used=new Set(topN.map(m=>m.name));
+      const rest=state.menu.filter(m=>!used.has(m.name));
+      return [...topN,...rest].slice(0,n);
+    }
+    return topN;
+  }
+
+  function exportOrdersCSV(rows){
+    const statusLabel={pending:'Belum Diantar',belum_bayar:'Belum Bayar',lunas:'Lunas'};
+    const header='Tanggal,Jam,Meja,Item,Qty,Status,Subtotal';
+    const lines=rows.map(r=>{
+      const d=new Date(r.time);
+      return [
+        d.toLocaleDateString('id-ID'),
+        d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),
+        r.table, '"'+r.name+'"', r.qty,
+        statusLabel[r.status]||r.status, r.subtotal
+      ].join(',');
+    });
+    const csv=[header,...lines].join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url; a.download='atras-orders.csv'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('Data diekspor sebagai CSV');
+  }
+
   function render(){
     if(dbErrorMsg && !dbReady){
       app.innerHTML = `<div style="padding:40px;text-align:center;color:#8D90A6;font-family:sans-serif;">
         <div style="font-size:32px;margin-bottom:10px;">⚠️</div>
-        <div style="font-weight:700;color:#23263A;margin-bottom:6px;">Belum bisa konek ke database</div>
+        <div style="font-weight:500;color:#23263A;margin-bottom:6px;">Belum bisa konek ke database</div>
         <div style="font-size:13px;max-width:360px;margin:0 auto;">${dbErrorMsg}</div>
       </div>`;
       return;
@@ -1064,19 +1176,19 @@
     app.innerHTML = `
       <div class="header">
         <div class="brand">
-          <div class="logo">☕</div>
-          <div><div class="name">Atras Coffee</div><div class="tag">Order & Serve Tracker</div></div>
+          <img src="atras logo navbar.png" class="brand-logo" alt="Atras Coffee">
         </div>
         <div class="navtabs">
-          <button data-nav="overview" class="${view==='overview'?'active':''}">📊 Overview</button>
-          <button data-nav="map" class="${view==='map'?'active':''}">🗺️ Meja</button>
-          <button data-nav="pending" class="${view==='pending'?'active':''}">⏳ Pending ${pendingCount>0?`<span class="badge">${pendingCount}</span>`:''}</button>
-          <button data-nav="menu" class="${view==='menu'?'active':''}">📋 Menu</button>
+          <button data-nav="overview" class="${view==='overview'?'active':''}">Overview</button>
+          <button data-nav="map" class="${view==='map'?'active':''}">Meja</button>
+          <button data-nav="pending" class="${view==='pending'?'active':''}">Pending${pendingCount>0?` <span class="badge">${pendingCount}</span>`:''}</button>
+          <button data-nav="menu" class="${view==='menu'?'active':''}">Menu</button>
         </div>
         <div class="headerright">
-          <div class="pillinfo">📅 ${dateStr}</div>
-          <div class="pillinfo">🕐 ${timeStr}</div>
-          <div class="profile"><div class="av">👤</div><div><div class="pn">Barista</div><div class="pr">On Duty</div></div></div>
+          <div class="profile">
+            <div class="av"><img src="Pendi Photos.png" alt="Pendi"></div>
+            <div><div class="pn">Pendi</div><div class="pr">On Duty</div></div>
+          </div>
         </div>
       </div>
       <div class="body" id="bodyArea"></div>
@@ -1101,40 +1213,43 @@
   }
 
   function renderOverviewView(el){
-    // --- filter label ---
     const filterLabel = filterPreset==='today' ? 'Hari Ini'
       : filterPreset==='7d' ? '7 Hari Terakhir'
       : filterPreset==='month' ? filterStart.toLocaleDateString('id-ID',{month:'long',year:'numeric'})
-      : toDateInput(filterStart)+' s/d '+toDateInput(filterEnd);
+      : toDateInput(filterStart)+' – '+toDateInput(filterEnd);
 
-    // 1. Filter bar
+    // 1. Filter dropdown + custom range
     const filterBarHtml = `
-      <div class="filter-bar">
-        <span style="font-weight:800;color:var(--ink);white-space:nowrap;">📅 Filter:</span>
-        <div class="filter-presets">
-          <button data-preset="today" class="${filterPreset==='today'?'sel':''}">Hari Ini</button>
-          <button data-preset="7d" class="${filterPreset==='7d'?'sel':''}">7 Hari</button>
-          <button data-preset="month" class="${filterPreset==='month'?'sel':''}">Bulan Ini</button>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+        <div class="period-dropdown" id="periodDropdownWrap">
+          <div class="pd-trigger" id="pdTrigger">
+            <span>${filterLabel}</span>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4.5L7 9.5L12 4.5" stroke="#677A5E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="pd-menu" id="pdMenu">
+            <div class="pd-option ${filterPreset==='today'?'active':''}" data-preset="today">Hari Ini</div>
+            <div class="pd-option ${filterPreset==='7d'?'active':''}" data-preset="7d">7 Hari Terakhir</div>
+            <div class="pd-option ${filterPreset==='month'?'active':''}" data-preset="month">Bulan Ini</div>
+          </div>
         </div>
-        <div class="filter-custom">
-          <span style="white-space:nowrap;font-size:11.5px;">Custom:</span>
+        <div class="custom-range">
           <input type="date" id="fsInput" value="${toDateInput(filterStart)}"/>
-          <span>—</span>
+          <span class="cr-sep">—</span>
           <input type="date" id="feInput" value="${toDateInput(filterEnd)}"/>
-          <button class="filter-apply" id="filterApplyBtn">Terapkan</button>
+          <button class="cr-apply" id="filterApplyBtn">Terapkan</button>
         </div>
       </div>`;
 
     // 2. 4 Stat cards
     const summary = filteredSummary();
     const statsHtml = [
-      {icon:'🧾', value:summary.items,              label:'Item Terjual'},
-      {icon:'🔒', value:summary.closedCount,         label:'Transaksi Selesai'},
-      {icon:'💰', value:fmtMoney(summary.revenue),   label:'Total Pendapatan'},
-      {icon:'📊', value:fmtMoney(summary.avg),       label:'Rata-rata / Transaksi'},
+      {icon:'Icon Item.png',        value:summary.items,              label:'Item Terjual'},
+      {icon:'Icon Transksi.png',    value:summary.closedCount,        label:'Transaksi Selesai'},
+      {icon:'Icon Pendapatan.png',  value:fmtMoney(summary.revenue),  label:'Total Pendapatan'},
+      {icon:'Icon Transkasi.png',   value:fmtMoney(summary.avg),      label:'Rata-rata / Transaksi'},
     ].map(c=>`
       <div class="statcard">
-        <div class="icobox">${c.icon}</div>
+        <div class="icobox"><img src="${c.icon}" alt=""></div>
         <div class="sc-value">${c.value}</div>
         <div class="sc-label">${c.label}</div>
         <div class="sc-divider"></div>
@@ -1159,7 +1274,7 @@
                     <div style="display:flex;align-items:flex-end;height:240px;width:100%;">
                       <div class="bar revenue ${d.isToday?'today':''}"
                         style="height:${Math.max(d.total>0?5:1,(d.total/maxRev)*100)}%;width:100%;border-radius:8px 8px 3px 3px;position:relative;">
-                        ${d.total>0?`<span style="position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:9px;font-weight:700;color:var(--ink-soft);white-space:nowrap;">${fmtK(d.total)}</span>`:''}
+                        ${d.total>0?`<span style="position:absolute;top:-18px;left:0;right:0;text-align:center;font-size:9px;font-weight:500;color:var(--ink-soft);white-space:nowrap;">${fmtK(d.total)}</span>`:''}
                       </div>
                     </div>
                     <div class="bar-label" style="font-size:9px;margin-top:6px;text-align:center;">${d.label}</div>
@@ -1172,10 +1287,10 @@
     const {top, bot} = topBottomDays();
     const dayCard = (d, colorVar, bgVar, title) => `
       <div style="background:${bgVar};border-radius:13px;padding:14px 16px;flex:1;min-width:0;">
-        <div style="font-size:10.5px;font-weight:800;color:${colorVar};text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${title||''}</div>
+        <div style="font-size:10.5px;font-weight:600;color:${colorVar};text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px;">${title||''}</div>
         ${d
-          ? `<div style="font-weight:800;font-size:14px;color:var(--ink);margin-bottom:4px;">${d.label||''}</div>
-             <div style="font-size:20px;font-weight:800;color:${colorVar};">${fmtMoney(d.total||0)}</div>`
+          ? `<div style="font-weight:600;font-size:14px;color:var(--ink);margin-bottom:4px;">${d.label||''}</div>
+             <div style="font-size:20px;font-weight:600;color:${colorVar};">${fmtMoney(d.total||0)}</div>`
           : '<div style="font-size:12px;color:var(--ink-soft);">Belum ada data</div>'}
       </div>`;
     const topBotHtml = `
@@ -1220,24 +1335,33 @@
             </div>`}
       </div>`;
 
-    // 5. Order list (scrollable, semua baris tapi max-height ~10 rows)
+    // 5. Order list
     const allRows = buildFilteredOrderRows();
     const statusLabel = {pending:'Belum Diantar', belum_bayar:'Belum Bayar', lunas:'Lunas'};
+    const menuCats = orderedCategories();
+    const filteredRows = allRows.filter(r=>{
+      if(ovCatFilter!=='Semua'){const m=state.menu.find(x=>x.name===r.name);if(!m||m.cat!==ovCatFilter)return false;}
+      if(ovSearch){return r.name.toLowerCase().includes(ovSearch.toLowerCase())||r.table.toLowerCase().includes(ovSearch.toLowerCase());}
+      return true;
+    });
     const orderListHtml = `
       <div class="panel" style="margin-top:18px;">
-        <div class="toolrow" style="margin-bottom:14px;">
-          <h3 style="margin:0;">Order List <span style="font-size:12px;font-weight:600;color:var(--ink-soft);">(${allRows.length} item)</span></h3>
-          <button class="btn btn-line" id="sortOrderListBtn">⇅ ${orderListSortAsc?'Terlama':'Terbaru'}</button>
+        <div class="ol-toolbar">
+          <div class="ol-tabs">
+            <button data-olcat="Semua" class="${ovCatFilter==='Semua'?'sel':''}">All Order</button>
+            ${menuCats.map(c=>`<button data-olcat="${c}" class="${ovCatFilter===c?'sel':''}">${c}</button>`).join('')}
+          </div>
+          <button class="ol-export" id="exportBtn" style="display:flex;align-items:center;gap:7px;"><img src="download.png" style="width:15px;height:15px;object-fit:contain;"> Export Data</button>
         </div>
-        ${allRows.length===0
-          ? '<div style="font-size:12.5px;color:var(--ink-soft);">Belum ada pesanan di periode ini.</div>'
+        ${filteredRows.length===0
+          ? '<div style="font-size:12.5px;color:var(--ink-soft);padding:20px 0;">Belum ada pesanan di periode ini.</div>'
           : `<div class="orderlist-scroll-wrap">
               <table class="orderlist-table">
                 <thead>
                   <tr><th>Tanggal</th><th>Jam</th><th>Meja</th><th>Item</th><th>Qty</th><th>Status</th><th>Subtotal</th></tr>
                 </thead>
                 <tbody>
-                  ${allRows.map(r=>`
+                  ${filteredRows.map(r=>`
                     <tr>
                       <td>${new Date(r.time).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})}</td>
                       <td>${new Date(r.time).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}</td>
@@ -1263,15 +1387,36 @@
       ${orderListHtml}
     `;
 
-    document.getElementById('sortOrderListBtn').onclick = ()=>{ orderListSortAsc=!orderListSortAsc; render(); };
+    // Dropdown toggle
+    const pdTrigger = document.getElementById('pdTrigger');
+    const pdMenu = document.getElementById('pdMenu');
+    if(pdTrigger && pdMenu){
+      pdTrigger.onclick = (e)=>{
+        e.stopPropagation();
+        const isOpen = pdMenu.classList.contains('open');
+        pdMenu.classList.toggle('open', !isOpen);
+        pdTrigger.classList.toggle('open', !isOpen);
+      };
+      document.addEventListener('click', function closePd(e){
+        if(!document.getElementById('periodDropdownWrap')?.contains(e.target)){
+          pdMenu.classList.remove('open'); pdTrigger.classList.remove('open');
+          document.removeEventListener('click', closePd);
+        }
+      });
+    }
+    // Preset options
     el.querySelectorAll('[data-preset]').forEach(b=>{
-      b.onclick = async ()=>{
+      b.onclick = async (e)=>{
+        e.stopPropagation();
         applyFilterPreset(b.dataset.preset);
         await loadFilteredData();
         render();
       };
     });
-    document.getElementById('filterApplyBtn').onclick = async ()=>{
+    // Custom date
+    const fapplyBtn = document.getElementById('filterApplyBtn');
+    if(fapplyBtn) fapplyBtn.onclick = async (e)=>{
+      e.stopPropagation();
       const sv=document.getElementById('fsInput').value;
       const ev=document.getElementById('feInput').value;
       if(!sv||!ev) return;
@@ -1280,6 +1425,13 @@
       await loadFilteredData();
       render();
     };
+    // Category tabs
+    el.querySelectorAll('[data-olcat]').forEach(b=>{
+      b.onclick=()=>{ ovCatFilter=b.dataset.olcat; render(); };
+    });
+    // Export
+    const expBtn = document.getElementById('exportBtn');
+    if(expBtn) expBtn.onclick=()=>exportOrdersCSV(filteredRows);
   }
   function renderMapView(el){
     el.innerHTML = `
@@ -1414,18 +1566,59 @@
     if(categoryReorderMode){
       const row = document.getElementById('reorderChipRow');
       let dragSrc = null;
+      let touchDragSrc = null;
+      let touchDragEl = null;
+      let touchOverEl = null;
+
+      function doReorder(fromCat, toCat){
+        if(!fromCat || !toCat || fromCat===toCat) return;
+        const ord = orderedCategories();
+        const from = ord.indexOf(fromCat), to = ord.indexOf(toCat);
+        if(from===-1 || to===-1) return;
+        ord.splice(from,1); ord.splice(to,0,fromCat);
+        commitCategoryOrder(ord);
+      }
+
       row.querySelectorAll('[data-dragcat]').forEach(chip=>{
-        chip.addEventListener('dragstart', (ev)=>{ dragSrc = chip.dataset.dragcat; ev.dataTransfer.effectAllowed='move'; });
-        chip.addEventListener('dragover', (ev)=>{ ev.preventDefault(); });
+        // Mouse drag
+        chip.addEventListener('dragstart', (ev)=>{ dragSrc=chip.dataset.dragcat; ev.dataTransfer.effectAllowed='move'; });
+        chip.addEventListener('dragover', (ev)=>{ ev.preventDefault(); chip.style.outline='2px solid var(--purple)'; });
+        chip.addEventListener('dragleave', ()=>{ chip.style.outline=''; });
         chip.addEventListener('drop', (ev)=>{
-          ev.preventDefault();
-          const target = chip.dataset.dragcat;
-          if(!dragSrc || dragSrc===target) return;
-          const order = orderedCategories();
-          const from = order.indexOf(dragSrc), to = order.indexOf(target);
-          order.splice(from,1); order.splice(to,0,dragSrc);
-          commitCategoryOrder(order);
+          ev.preventDefault(); chip.style.outline='';
+          doReorder(dragSrc, chip.dataset.dragcat);
         });
+        chip.addEventListener('dragend', ()=>{ chip.style.outline=''; });
+
+        // Touch drag
+        chip.addEventListener('touchstart', (ev)=>{
+          touchDragSrc = chip.dataset.dragcat;
+          touchDragEl = chip;
+          chip.style.opacity='0.55';
+          chip.style.transform='scale(1.06)';
+        }, {passive:true});
+
+        chip.addEventListener('touchmove', (ev)=>{
+          ev.preventDefault();
+          const t = ev.touches[0];
+          const el = document.elementFromPoint(t.clientX, t.clientY);
+          const over = el?.closest('[data-dragcat]');
+          if(touchOverEl && touchOverEl!==over) touchOverEl.style.outline='';
+          if(over && over!==touchDragEl){
+            over.style.outline='2px solid var(--purple)';
+            touchOverEl = over;
+          }
+        }, {passive:false});
+
+        chip.addEventListener('touchend', (ev)=>{
+          if(touchDragEl){ touchDragEl.style.opacity=''; touchDragEl.style.transform=''; }
+          if(touchOverEl){ touchOverEl.style.outline=''; }
+          const t = ev.changedTouches[0];
+          const el = document.elementFromPoint(t.clientX, t.clientY);
+          const target = el?.closest('[data-dragcat]');
+          if(target) doReorder(touchDragSrc, target.dataset.dragcat);
+          touchDragSrc=null; touchDragEl=null; touchOverEl=null;
+        }, {passive:true});
       });
     }
   }
@@ -1447,8 +1640,10 @@
     const breakdown = paymentBreakdown(items);
     const total = itemsTotal(items);
     const cats = ['Semua', ...orderedCategories()];
-    const filtered = state.menu.filter(m=>
-      (orderCatFilter==='Semua' || m.cat===orderCatFilter) &&
+    const baseItems = orderCatFilter==='Semua'
+      ? topMenuItems(15)
+      : state.menu.filter(m=>m.cat===orderCatFilter);
+    const filtered = baseItems.filter(m=>
       m.name.toLowerCase().includes(orderSearch.toLowerCase())
     );
 
@@ -1458,7 +1653,7 @@
       <div class="ordermain">
         <div class="backrow">
           <button class="backbtn" id="backBtn">← Kembali</button>
-          <div style="font-weight:800;font-size:15px;">${isNew ? '1. Pilih Menu' : 'Meja '+t.name}</div>
+          <div style="font-weight:600;font-size:15px;">${isNew ? '1. Pilih Menu' : 'Meja '+t.name}</div>
           ${isNew ? '<span class="stepbadge">Pesanan Baru</span>' : ''}
         </div>
         <div class="searchbar">🔍<input id="orderSearchInput" placeholder="Cari menu..." value="${orderSearch}"/></div>
@@ -1466,7 +1661,8 @@
           <button id="referralToggle" class="btn ${referralMode?'btn-purple':'btn-line'}">🎟️ Harga Teman ${referralMode?'AKTIF':''}</button>
           <span style="font-size:11px;color:var(--ink-soft);">Flat Rp10.000 utk Kopi Susu / Mocktail / Milk Based / Refreshments</span>
         </div>
-        <div class="chiprow" style="flex-wrap:wrap;overflow-x:visible;position:static;">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c}</div>`).join('')}</div>
+        <div class="chiprow" style="flex-wrap:wrap;overflow-x:visible;position:static;">${cats.map(c=>`<div class="chip ${orderCatFilter===c?'active':''}" data-ocat="${c}">${c==='Semua'?'⭐ Semua':c}</div>`).join('')}</div>
+        ${orderCatFilter==='Semua'?`<div style="font-size:11.5px;color:var(--ink-soft);margin-bottom:10px;">15 item yang paling sering dipesan</div>`:''}
         <div class="grid">
           ${filtered.map(m=>{
             const qty = displayQtyFor(items, m.id);
@@ -1651,7 +1847,7 @@
           ${sp.lines.map(l=>`
             <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);">
               <div style="flex:1;">
-                <div style="font-weight:700;font-size:13px;">${l.name}</div>
+                <div style="font-weight:500;font-size:13px;">${l.name}</div>
                 <div style="font-size:11px;color:var(--ink-soft);">${fmtMoney(l.price)} / unit · maks ${l.maxQty}</div>
               </div>
               <div class="qtystep" style="width:auto;gap:8px;">
